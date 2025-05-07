@@ -1,14 +1,22 @@
 import { z } from 'zod';
 
 const configSchema = z.object({
-  NEXT_PUBLIC_API_ENDPOINT: z.string(),
-  API_KEY: z.string(),
+  NEXT_PUBLIC_API_ENDPOINT: z.string().url(),
+  NEXT_PUBLIC_API_KEY: z.string().min(1),
 });
-const configProject = configSchema.safeParse(process.env)
 
-if (!configProject.success) {
-  throw new Error(`File .env wrong format: ${JSON.stringify(configProject.error.format())}`);
+const rawEnv = {
+  NEXT_PUBLIC_API_ENDPOINT: process.env.NEXT_PUBLIC_API_ENDPOINT,
+  NEXT_PUBLIC_API_KEY: process.env.NEXT_PUBLIC_API_KEY,
+};
+
+const parsed = configSchema.safeParse(rawEnv);
+
+if (!parsed.success) {
+  console.error('Invalid environment variables:', parsed.error.format());
+  throw new Error('.env file has wrong format, app cannot start.');
 }
 
-const envConfig = configProject.data
-export default envConfig
+const envConfig = parsed.data;
+
+export default envConfig;

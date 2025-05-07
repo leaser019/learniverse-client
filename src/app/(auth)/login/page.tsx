@@ -11,13 +11,16 @@ import {
   FormMessage
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { authApi } from '@/services/api/authApi';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { motion } from 'framer-motion';
+import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import toast from 'react-hot-toast';
+import { z } from 'zod';
 import LoginContent from './components/LoginContent';
 
 const loginSchema = z.object({
@@ -30,10 +33,10 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  
+  const [error, setError] = useState('');
+
   const router = useRouter();
-  
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver<LoginFormValues, unknown, LoginFormValues>(loginSchema),
     defaultValues: {
@@ -45,27 +48,59 @@ export default function Login() {
   async function onSubmit(data: LoginFormValues) {
     try {
       setLoading(true);
-      setError("");
-      
-      console.log("Form data:", data);
-      
-      // setTimeout(() => {
-      //   setLoading(false);
-      //   router.push("/dashboard");
-      // }, 1500);
+      setError('');
+      const response = await authApi.login({
+        email: data.email,
+        password: data.password,
+      });
+      console.log('Login response:', response);
+      const responseData = response.data || response;
+      if (responseData.metadata.token) {
+        const { accessToken, refreshToken } = responseData.metadata.token;
+        const userInfo = responseData.metadata.user;
+        const expires = 1;
+
+        document.cookie = `accessToken=${accessToken}; path=/; max-age=${
+          expires * 24 * 60 * 60
+        }; SameSite=Lax`;
+        document.cookie = `refreshToken=${refreshToken}; path=/; max-age=${
+          expires * 24 * 60 * 60
+        }; SameSite=Lax`;
+        if (userInfo?._id) {
+          document.cookie = `clientId=${userInfo._id}; path=/; max-age=${
+            expires * 24 * 60 * 60
+          }; SameSite=Lax`;
+          localStorage.setItem('userId', userInfo._id);
+        }
+
+        localStorage.setItem('userInfo', JSON.stringify(userInfo));
+
+        toast.success('Đăng nhập thành công!', {
+          duration: 2000,
+          icon: '🚀',
+        });
+
+        // setTimeout(() => {
+        //   router.push('/dashboard');
+        // }, 2000);
+      }
     } catch (err) {
       setLoading(false);
-      setError("Đăng nhập thất bại, vui lòng thử lại");
+      setError('Đăng nhập thất bại, vui lòng thử lại');
     }
   }
 
   return (
     <div className="flex flex-col lg:flex-row h-[75%] bg-white overflow-hidden">
       <div className="h-full w-full flex items-center justify-center mt-10">
-        <LoginContent/>
+        <LoginContent />
       </div>
-      
-      <div className="h-full w-full lg:w-3/5 bg-white flex flex-col justify-center">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="h-full w-full lg:w-3/5 bg-white flex flex-col justify-center"
+      >
         <div className="max-w-md mx-auto w-full px-8 md:px-12">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-900">Chào mừng trở lại!</h2>
@@ -73,9 +108,18 @@ export default function Login() {
           </div>
 
           {error && (
-            <div className="mb-6 p-3 bg-red-50 text-sm text-red-600 rounded-lg border border-red-100 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-red-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            <div className="my-6 p-3 bg-red-50 text-sm text-red-600 rounded-lg border border-red-100 flex items-center">
+              <svg
+                className="w-5 h-5 mr-2 text-red-500"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
               </svg>
               {error}
             </div>
@@ -88,9 +132,7 @@ export default function Login() {
                 name="email"
                 render={({ field }) => (
                   <FormItem className="space-y-2">
-                    <FormLabel className="text-sm font-medium text-gray-700 block">
-                      Email
-                    </FormLabel>
+                    <FormLabel className="text-sm font-medium text-gray-700 block">Email</FormLabel>
                     <div className="relative">
                       <FormControl>
                         <Input
@@ -118,14 +160,17 @@ export default function Login() {
                       <FormLabel className="text-sm font-medium text-gray-700 block">
                         Mật khẩu
                       </FormLabel>
-                      <Link href="/forgot-password" className="text-sm font-medium text-blue-600 hover:text-blue-500">
+                      <Link
+                        href="/forgot-password"
+                        className="text-sm font-medium text-blue-600 hover:text-blue-500"
+                      >
                         Quên mật khẩu?
                       </Link>
                     </div>
                     <div className="relative">
                       <FormControl>
                         <Input
-                          type={showPassword ? "text" : "password"}
+                          type={showPassword ? 'text' : 'password'}
                           placeholder="••••••••"
                           className="pl-10 pr-10 border-blue-200 focus:border-blue-400 focus:ring focus:ring-blue-200 focus:ring-opacity-50 rounded-lg"
                           {...field}
@@ -164,9 +209,7 @@ export default function Login() {
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel className="text-sm text-gray-700">
-                        Ghi nhớ đăng nhập
-                      </FormLabel>
+                      <FormLabel className="text-sm text-gray-700">Ghi nhớ đăng nhập</FormLabel>
                     </div>
                   </FormItem>
                 )}
@@ -179,13 +222,31 @@ export default function Login() {
               >
                 {loading ? (
                   <div className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     <span>Đang xử lý...</span>
                   </div>
-                ) : "Đăng nhập"}
+                ) : (
+                  'Đăng nhập'
+                )}
               </Button>
 
               <div className="relative my-6">
@@ -215,11 +276,7 @@ export default function Login() {
                   variant="outline"
                   className="flex items-center justify-center py-2.5 border border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-all"
                 >
-                  <svg
-                    className="h-5 w-5 text-[#1877F2]"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                  <svg className="h-5 w-5 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                   </svg>
                 </Button>
@@ -228,11 +285,7 @@ export default function Login() {
                   variant="outline"
                   className="flex items-center justify-center py-2.5 border border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-all"
                 >
-                  <svg
-                    className="h-5 w-5"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 0C5.373 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.386-1.332-1.755-1.332-1.755-1.09-.744.083-.73.083-.73 1.205.085 1.838 1.236 1.838 1.236 1.07 1.835 2.807 1.305 3.492.998.108-.775.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.4 3-.405 1.02.005 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.605-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.298 24 12c0-6.627-5.373-12-12-12" />
                   </svg>
                 </Button>
@@ -240,7 +293,7 @@ export default function Login() {
 
               <div className="mt-6">
                 <p className="text-center text-sm text-gray-600">
-                  Chưa có tài khoản?{" "}
+                  Chưa có tài khoản?{' '}
                   <Link
                     href="/register"
                     className="font-medium text-blue-600 hover:text-blue-400 hover:underline transition-colors"
@@ -252,7 +305,7 @@ export default function Login() {
             </form>
           </Form>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
