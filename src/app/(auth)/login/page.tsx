@@ -1,17 +1,16 @@
 'use client';
 
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { authApi } from '@/services/api/authApi';
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import authApi from '@/services/api/authApi';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
@@ -24,8 +23,8 @@ import { z } from 'zod';
 import LoginContent from './components/LoginContent';
 
 const loginSchema = z.object({
-  email: z.string().email('Email không hợp lệ').min(1, 'Email không được để trống'),
-  password: z.string().min(1, 'Mật khẩu không được để trống'),
+  email: z.string().email('Invalid email').min(1, 'Email cannot be empty'),
+  password: z.string().min(1, 'Password cannot be empty'),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -49,50 +48,36 @@ export default function Login() {
     try {
       setLoading(true);
       setError('');
+
       const response = await authApi.login({
         email: data.email,
         password: data.password,
       });
-      console.log('Login response:', response);
-      const responseData = response.data || response;
-      if (responseData.metadata.token) {
-        const { accessToken, refreshToken } = responseData.metadata.token;
-        const userInfo = responseData.metadata.user;
-        const expires = 1;
 
-        document.cookie = `accessToken=${accessToken}; path=/; max-age=${
-          expires * 24 * 60 * 60
-        }; SameSite=Lax`;
-        document.cookie = `refreshToken=${refreshToken}; path=/; max-age=${
-          expires * 24 * 60 * 60
-        }; SameSite=Lax`;
-        if (userInfo?._id) {
-          document.cookie = `clientId=${userInfo._id}; path=/; max-age=${
-            expires * 24 * 60 * 60
-          }; SameSite=Lax`;
-          localStorage.setItem('userId', userInfo._id);
-        }
-
-        localStorage.setItem('userInfo', JSON.stringify(userInfo));
-
-        toast.success('Đăng nhập thành công!', {
+      const userInfo = response.metadata?.user;
+      localStorage.setItem('userId', userInfo?._id || '');
+      localStorage.setItem('userData', JSON.stringify(userInfo) || '');
+      if (userInfo?._id) {
+        toast.success('Login successful', {
           duration: 2000,
-          icon: '🚀',
         });
-
-        // setTimeout(() => {
-        //   router.push('/dashboard');
-        // }, 2000);
+        router.push('/home');
+      } else {
+        setError('Login failed, please try again');
+        toast.error('Login failed, please try again');
       }
-    } catch (err) {
+    } catch (error: any) {
+      console.error('Login error:', error);
+      setError(error.message || 'An error occurred, please try again later');
+      toast.error(error.message || 'Login failed');
+    } finally {
       setLoading(false);
-      setError('Đăng nhập thất bại, vui lòng thử lại');
     }
   }
 
   return (
-    <div className="flex flex-col lg:flex-row h-[75%] bg-white overflow-hidden">
-      <div className="h-full w-full flex items-center justify-center mt-10">
+    <div className="flex flex-col lg:flex-row h-auto bg-white overflow-hidden">
+      <div className="h-full w-full flex items-center justify-center">
         <LoginContent />
       </div>
       <motion.div
@@ -103,8 +88,8 @@ export default function Login() {
       >
         <div className="max-w-md mx-auto w-full px-8 md:px-12">
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900">Chào mừng trở lại!</h2>
-            <p className="text-sm text-gray-600 mt-1">Đăng nhập để tiếp tục cuộc hành trình</p>
+            <h2 className="text-2xl font-bold text-gray-900">Welcome back!</h2>
+            <p className="text-sm text-gray-600 mt-1">Log in to continue your journey</p>
           </div>
 
           {error && (
@@ -158,13 +143,13 @@ export default function Login() {
                   <FormItem className="space-y-2">
                     <div className="flex items-center justify-between">
                       <FormLabel className="text-sm font-medium text-gray-700 block">
-                        Mật khẩu
+                        Password
                       </FormLabel>
                       <Link
                         href="/forgot-password"
                         className="text-sm font-medium text-blue-600 hover:text-blue-500"
                       >
-                        Quên mật khẩu?
+                        Forgot password?
                       </Link>
                     </div>
                     <div className="relative">
@@ -196,7 +181,7 @@ export default function Login() {
                 )}
               />
 
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="rememberMe"
                 render={({ field }) => (
@@ -209,11 +194,11 @@ export default function Login() {
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel className="text-sm text-gray-700">Ghi nhớ đăng nhập</FormLabel>
+                      <FormLabel className="text-sm text-gray-700">Remember me</FormLabel>
                     </div>
                   </FormItem>
                 )}
-              />
+              /> */}
 
               <Button
                 type="submit"
@@ -242,10 +227,10 @@ export default function Login() {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       ></path>
                     </svg>
-                    <span>Đang xử lý...</span>
+                    <span>Processing...</span>
                   </div>
                 ) : (
-                  'Đăng nhập'
+                  'Log in'
                 )}
               </Button>
 
@@ -254,7 +239,7 @@ export default function Login() {
                   <div className="w-full border-t border-gray-200"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-4 text-sm text-gray-500 bg-white">Hoặc tiếp tục với</span>
+                  <span className="px-4 text-sm text-gray-500 bg-white">Or continue with</span>
                 </div>
               </div>
 
@@ -293,12 +278,12 @@ export default function Login() {
 
               <div className="mt-6">
                 <p className="text-center text-sm text-gray-600">
-                  Chưa có tài khoản?{' '}
+                  Don't have an account?{' '}
                   <Link
                     href="/register"
                     className="font-medium text-blue-600 hover:text-blue-400 hover:underline transition-colors"
                   >
-                    Đăng ký ngay
+                    Register now
                   </Link>
                 </p>
               </div>

@@ -10,8 +10,8 @@ import {
   FormMessage
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { authApi } from "@/services/api/authApi";
-import { zodResolver } from "@hookform/resolvers/zod";
+import authApi from '@/services/api/authApi';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Lock, Mail, Rocket, User } from 'lucide-react';
 import Link from 'next/link';
@@ -64,6 +64,9 @@ export default function Register() {
         toast.success('Thành công, xin chào member mới!', {
           duration: 2000,
         });
+        setTimeout(() => {
+          router.push('/login');
+        }, 2000);
       } else {
         toast.error('Đã xảy ra lỗi', {
           icon: '😭',
@@ -71,9 +74,6 @@ export default function Register() {
         });
         return;
       }
-      setTimeout(() => {
-        router.push('/login');
-      }, 2000);
     } catch (error) {
       setLoading(false);
       toast.error(error.message || 'Đã xảy ra lỗi', {
@@ -96,10 +96,10 @@ export default function Register() {
         <div className="max-w-md mx-auto w-full">
           <div className="mb-8 text-center">
             <h2 className="text-3xl font-bold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-500">
-              Bắt đầu hành trình mới
+              Start new journey with us
             </h2>
             <p className="text-sm text-gray-600 mt-2">
-              Tạo tài khoản và khám phá thế giới kiến thức vô tận
+              Create new account and explore the knowledgeable word
             </p>
           </div>
 
@@ -183,7 +183,7 @@ export default function Register() {
                 render={({ field }) => (
                   <FormItem className="space-y-2">
                     <FormLabel className="text-sm font-medium text-gray-700 block">
-                      Mật khẩu
+                      Password
                     </FormLabel>
                     <div className="relative">
                       <FormControl>
@@ -221,7 +221,7 @@ export default function Register() {
                             field.value?.match(/[A-Z]/) ? 'bg-green-500' : 'bg-gray-300'
                           }`}
                         ></div>
-                        <span>Ít nhất 1 chữ hoa</span>
+                        <span>At least 1 uppercase character</span>
                       </div>
                       <div
                         className={`flex items-center ${
@@ -233,7 +233,7 @@ export default function Register() {
                             field.value?.match(/[a-z]/) ? 'bg-green-500' : 'bg-gray-300'
                           }`}
                         ></div>
-                        <span>Ít nhất 1 chữ thường</span>
+                        <span>At least one normal character</span>
                       </div>
                       <div
                         className={`flex items-center ${
@@ -245,7 +245,7 @@ export default function Register() {
                             field.value?.match(/[0-9]/) ? 'bg-green-500' : 'bg-gray-300'
                           }`}
                         ></div>
-                        <span>Ít nhất 1 số</span>
+                        <span>At least one number</span>
                       </div>
                       <div
                         className={`flex items-center ${
@@ -257,7 +257,7 @@ export default function Register() {
                             field.value?.match(/[^A-Za-z0-9]/) ? 'bg-green-500' : 'bg-gray-300'
                           }`}
                         ></div>
-                        <span>Ít nhất 1 ký tự đặc biệt</span>
+                        <span>At least one special character</span>
                       </div>
                       <div
                         className={`flex items-center ${
@@ -269,7 +269,7 @@ export default function Register() {
                             field.value?.length >= 8 ? 'bg-green-500' : 'bg-gray-300'
                           }`}
                         ></div>
-                        <span>Tối thiểu 8 ký tự</span>
+                        <span>Minium 8 character</span>
                       </div>
                     </div>
                   </FormItem>
@@ -303,12 +303,12 @@ export default function Register() {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       ></path>
                     </svg>
-                    <span>Đang xử lý...</span>
+                    <span>Loading...</span>
                   </div>
                 ) : (
                   <>
                     <Rocket className="w-4 h-4" />
-                    <span>Tạo tài khoản</span>
+                    <span>Create New Account</span>
                   </>
                 )}
               </Button>
@@ -318,7 +318,7 @@ export default function Register() {
                   <div className="w-full border-t border-gray-200"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-4 text-sm text-gray-500 bg-white">Hoặc tiếp tục với</span>
+                  <span className="px-4 text-sm text-gray-500 bg-white">Or countinue with</span>
                 </div>
               </div>
 
@@ -357,12 +357,12 @@ export default function Register() {
 
               <div className="mt-6">
                 <p className="text-center text-sm text-gray-600">
-                  Đã có tài khoản?{' '}
+                  Already have an account?{' '}
                   <Link
                     href="/login"
                     className="font-medium text-blue-600 hover:text-blue-400 hover:underline transition-colors"
                   >
-                    Đăng nhập ngay
+                    Login now
                   </Link>
                 </p>
               </div>

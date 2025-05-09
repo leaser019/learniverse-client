@@ -1,25 +1,22 @@
 "use client"
 
-import ReduxProvider from "@/redux/provider"
-import { useTheme } from "next-themes"
-import Image from "next/image"
-import Link from "next/link"
-import { useEffect, useState } from "react"
-import { Toaster } from "sonner"
+import { useTheme } from 'next-themes';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { Toaster } from 'sonner';
 
 export default function AuthLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
-  const [mounted, setMounted] = useState(false)
-  const { theme, setTheme } = useTheme()
-
+  const [mounted, setMounted] = useState(false);
+  const { theme, setTheme } = useTheme();
   useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  if (!mounted) return null
+    setMounted(true);
+  }, []);
+  if (!mounted) return null;
 
   return (
     <div className="relative min-h-screen w-full bg-gradient-to-br from-white to-gray-50 dark:from-slate-900 dark:to-slate-800 overflow-hidden">
@@ -38,25 +35,21 @@ export default function AuthLayout({
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <ReduxProvider>{children}</ReduxProvider>
-      </main>
-
-      <footer className="py-6 text-center text-sm text-gray-500 dark:text-gray-400 mt-auto">
+      <main className="container mx-auto px-4 py-8">{children}</main>
+      <footer className="pt-9 mb-2 text-center text-sm text-gray-500 dark:text-gray-400 mt-auto">
         <div className="flex justify-center space-x-4 mb-2">
           <Link href="/terms" className="hover:text-blue-500 transition-colors">
-            Điều khoản sử dụng
+            Term
           </Link>
           <Link href="/privacy" className="hover:text-blue-500 transition-colors">
-            Chính sách bảo mật
+            Privacy
           </Link>
           <Link href="/help" className="hover:text-blue-500 transition-colors">
-            Trợ giúp
+            Help
           </Link>
         </div>
         <p>© {new Date().getFullYear()} Learniverse. All rights reserved.</p>
       </footer>
-
       <Toaster position="top-right" richColors />
     </div>
   );

@@ -1,12 +1,48 @@
+'use client';
+import Navbar from '@/components/layout/Navbar';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function PublicLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+          router.replace('/login');
+          return;
+        }
+        setIsLoading(false);
+      } catch (error) {
+        router.replace('/login');
+      }
+    };
+
+    checkAuth();
+  }, [router]);
+
+  if (isLoading) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center">
+        <Skeleton />
+      </div>
+    );
+  }
+
   return (
-    <div>
-     {children}
+    <div className="min-h-screen bg-gray-50">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sms pb-5">
+        <Navbar />
+      </header>
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-16 py-8 mt-10">{children}</main>
     </div>
   );
 }
