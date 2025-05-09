@@ -50,9 +50,7 @@ export default function NotFound() {
       ))}
 
       <div className="text-center space-y-8 max-w-md mx-auto z-10 relative">
-        <div
-          className="flex flex-col items-center"
-        >
+        <div className="flex flex-col items-center">
           <div className="relative mb-6">
             <div className="absolute -inset-4 rounded-full bg-blue-500 opacity-20 blur-xl animate-pulse"></div>
             <Image
@@ -73,15 +71,15 @@ export default function NotFound() {
           </h1>
 
           <h2 className="mt-6 text-2xl font-bold bg-gradient-to-r from-blue-300 to-cyan-200 bg-clip-text text-transparent">
-            Oops! Trang này đã bay vào vũ trụ khác
+            Oops! This page has traveled to another learning universe !!
           </h2>
 
           <div className="mt-6 relative">
             <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg blur opacity-25 animate-pulse"></div>
             <p className="relative mt-2 text-blue-100 bg-slate-900/60 backdrop-blur-sm p-4 rounded-lg border border-blue-800/50">
-              Có vẻ như bạn đã khám phá quá xa trong vũ trụ học tập của chúng tôi.
+              It seems like you've ventured too far into our universe.
               <br />
-              Trang bạn đang tìm kiếm không tồn tại hoặc đã được di chuyển.
+              The page looking for doesn't exist or has been moved.
             </p>
           </div>
         </div>
@@ -90,7 +88,7 @@ export default function NotFound() {
           <Button
             onClick={() => router.back()}
             variant="outline"
-            className="w-full md:w-auto font-medium border border-blue-400/30 hover:border-blue-300 bg-slate-900/70 hover:bg-slate-800/90 text-blue-300 backdrop-blur-sm transition-all duration-300 hover:scale-105"
+            className="w-full md:w-auto font-medium border border-blue-400/30 hover:border-blue-300 bg-slate-900/70 hover:bg-slate-800/90 text-blue-300 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:text-white"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -106,14 +104,14 @@ export default function NotFound() {
                 d="M10 19l-7-7m0 0l7-7m-7 7h18"
               />
             </svg>
-            Quay lại trang trước
+            Go back to the previous page
           </Button>
 
           <Button
             asChild
             className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-indigo-500 hover:from-blue-500 hover:to-indigo-400 text-white font-medium shadow-lg shadow-blue-700/30 transition-all duration-300 hover:scale-105"
           >
-            <Link href="/">
+            <Link href="/home">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5 mr-2"
@@ -128,7 +126,7 @@ export default function NotFound() {
                   d="M3 12l2-2m0 0l7-7 7 7m-14 0l2 2m0 0l7 7 7-7m-14 0l2-2"
                 />
               </svg>
-              Về trang chủ
+              Back to home
             </Link>
           </Button>
         </div>

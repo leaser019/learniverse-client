@@ -1,6 +1,7 @@
 import ReduxProvider from '@/redux/provider';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import Link from 'next/link';
 import { Toaster } from 'react-hot-toast';
 import './globals.css';
 
@@ -16,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'Learniverse',
-  description: 'Learniverse - A platform for creative studyp',
+  description: 'Learniverse - A platform for creative studying',
 };
 
 export default function RootLayout({
@@ -33,6 +34,7 @@ export default function RootLayout({
         >
           <ReduxProvider>{children}</ReduxProvider>
         </body>
+
       </html>
     </>
   );
