@@ -1,26 +1,33 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { courses } from "@/data/course";
-import { Course } from "@/types/course";
-import { motion } from "framer-motion";
+import { Title } from '@/components/layout/Title';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
-  BarChart3,
-  Clock,
-  Filter,
-  Search,
-  Star,
-  Users,
-} from "lucide-react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { courses } from '@/data/course';
+import { Course } from '@/types/course';
+import { motion } from 'framer-motion';
+import { BarChart3, Clock, Filter, Search, Star, Users } from 'lucide-react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 /* ────────────────────────────────────────────────────────────────────────── */
 
@@ -28,18 +35,16 @@ const ExplorePage = () => {
   const router = useRouter();
 
   /* UI state -------------------------------------------------------------- */
-  const [activeTab, setActiveTab]         = useState<"all" | "popular" | "new" | "free">("all");
-  const [searchQuery, setSearchQuery]     = useState("");
-  const [priceRange, setPriceRange]       = useState<[number, number]>([0, 2_000_000]);
-  const [selectedLevel, setSelectedLevel] = useState<"all" | string>("all");
-  const [selectedCat, setSelectedCat]     = useState<"all" | string>("all");
+  const [activeTab, setActiveTab] = useState<'all' | 'popular' | 'new' | 'free'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 2_000_000]);
+  const [selectedLevel, setSelectedLevel] = useState<'all' | string>('all');
+  const [selectedCat, setSelectedCat] = useState<'all' | string>('all');
 
-  const [filtered, setFiltered]           = useState<Course[]>(courses);
+  const [filtered, setFiltered] = useState<Course[]>(courses);
 
   /* Derived data ---------------------------------------------------------- */
-  const allCategories = Array.from(
-    new Set(courses.flatMap(c => c.categories)),
-  );
+  const allCategories = Array.from(new Set(courses.flatMap((c) => c.categories)));
 
   /* Filtering + searching ------------------------------------------------- */
   useEffect(() => {
@@ -47,16 +52,14 @@ const ExplorePage = () => {
 
     // tab
     switch (activeTab) {
-      case "popular":
-        res = res.filter(c => c.isPopular);
+      case 'popular':
+        res = res.filter((c) => c.isPopular);
         break;
-      case "new":
-        res = res
-          .sort((a, b) => +new Date(b.lastUpdate) - +new Date(a.lastUpdate))
-          .slice(0, 10);
+      case 'new':
+        res = res.sort((a, b) => +new Date(b.lastUpdate) - +new Date(a.lastUpdate)).slice(0, 10);
         break;
-      case "free":
-        res = res.filter(c => c.price === 0 || c.discount === 1);
+      case 'free':
+        res = res.filter((c) => c.price === 0 || c.discount === 1);
         break;
       default:
         break;
@@ -66,25 +69,25 @@ const ExplorePage = () => {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       res = res.filter(
-        c =>
+        (c) =>
           c.title.toLowerCase().includes(q) ||
           c.description.toLowerCase().includes(q) ||
           c.instructor.toLowerCase().includes(q) ||
-          c.categories.some(cat => cat.toLowerCase().includes(q)),
+          c.categories.some((cat) => cat.toLowerCase().includes(q))
       );
     }
 
     // price
-    res = res.filter(c => {
+    res = res.filter((c) => {
       const discounted = c.price * (1 - c.discount);
       return discounted >= priceRange[0] && discounted <= priceRange[1];
     });
 
     // level
-    if (selectedLevel !== "all") res = res.filter(c => c.level === selectedLevel);
+    if (selectedLevel !== 'all') res = res.filter((c) => c.level === selectedLevel);
 
     // category
-    if (selectedCat !== "all") res = res.filter(c => c.categories.includes(selectedCat));
+    if (selectedCat !== 'all') res = res.filter((c) => c.categories.includes(selectedCat));
 
     setFiltered(res);
   }, [activeTab, searchQuery, priceRange, selectedLevel, selectedCat]);
@@ -94,21 +97,12 @@ const ExplorePage = () => {
 
   /* Render ---------------------------------------------------------------- */
   return (
-    <div className="container mx-auto max-w-7xl px-4 py-20">
-      {/* heading */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="mb-12 text-center"
-      >
-        <h1 className=" text-center justify-center md:text-3xl text-blue-800 mb-4 text-4xl font-bold">
-          Explore Our Courses
-        </h1>
-        <p className="text-center justify-center text-blue-600/80 mb-8 relative mx-auto max-w-3xl text-lg">
-          Search and learn from thousands of high-quality courses written by leading experts.
-        </p>
-      </motion.div>
+    <div className="container mx-auto max-w-7xl px-4 py-2">
+      <Title
+        title="Explore Our Courses"
+        description="Search and learn from thousands of high-quality courses written by leading experts in Computer Science and Technology."
+        accentColor="pink"
+      />
 
       {/* search & filter buttons */}
       <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
@@ -147,8 +141,8 @@ const ExplorePage = () => {
                   onValueChange={setPriceRange}
                 />
                 <div className="mt-2 flex justify-between text-sm text-gray-500">
-                  <span>{priceRange[0].toLocaleString()}₫</span>
-                  <span>{priceRange[1].toLocaleString()}₫</span>
+                  <span>{priceRange[0]?.toLocaleString()}₫</span>
+                  <span>{priceRange[1]?.toLocaleString()}₫</span>
                 </div>
               </section>
 
@@ -231,7 +225,12 @@ const ExplorePage = () => {
                     <Card className="flex h-full flex-col overflow-hidden">
                       {/* thumbnail */}
                       <div className="relative h-48">
-                        <Image src={c.thumbnailUrl} alt={c.title} fill className="object-cover" />
+                        <Image
+                          src={c.thumbnailUrl}
+                          alt={c.title}
+                          fill
+                          className="rounded-2xl object-fill p-2"
+                        />
                         {c.discount > 0 && (
                           <div className="absolute right-2 top-2 rounded bg-red-500 px-2 py-1 text-sm font-medium text-white">
                             -{Math.round(c.discount * 100)}%
@@ -293,18 +292,18 @@ const ExplorePage = () => {
                           {/* price */}
                           <div>
                             <div className="text-lg font-bold">
-                              {(c.price * (1 - c.discount)).toLocaleString()}₫
+                              {(c.price * (1 - c.discount))?.toLocaleString()}₫
                             </div>
                             {c.discount > 0 && (
                               <div className="text-sm text-gray-500 line-through">
-                                {c.originalPrice.toLocaleString()}₫
+                                {c.originalPrice?.toLocaleString()}₫
                               </div>
                             )}
                           </div>
                           {/* enrolments */}
                           <span className="flex items-center gap-1 text-sm text-gray-500">
                             <Users size={14} />
-                            {c.enrollmentCount.toLocaleString()}
+                            {c.enrollmentCount?.toLocaleString()}
                           </span>
                         </div>
                       </CardFooter>
@@ -314,12 +313,35 @@ const ExplorePage = () => {
               </div>
 
               {filtered.length === 0 && (
-                <div className="py-12 text-center">
-                  <h3 className="mb-2 text-xl font-bold">No courses found</h3>
-                  <p className="text-gray-600">
-                    Try adjusting your filters or using a different keyword.
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="flex flex-col items-center justify-center py-16 text-center"
+                >
+                  <div className="mb-6 rounded-full bg-blue-50 p-4">
+                    <Search size={32} className="text-blue-500" />
+                  </div>
+                  <h3 className="mb-3 text-2xl font-bold text-blue-900">
+                    Không tìm thấy khóa học nào
+                  </h3>
+                  <p className="mb-6 max-w-md text-blue-600/70">
+                    Hãy thử điều chỉnh bộ lọc hoặc sử dụng từ khóa khác để tìm kiếm.
                   </p>
-                </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setPriceRange([0, 2_000_000]);
+                      setSelectedLevel('all');
+                      setSelectedCat('all');
+                      setActiveTab('all');
+                    }}
+                    className="border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
+                  >
+                    Xóa tất cả bộ lọc
+                  </Button>
+                </motion.div>
               )}
             </TabsContent>
           </Tabs>

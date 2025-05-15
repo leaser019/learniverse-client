@@ -7,6 +7,7 @@ export interface Lesson {
   isFree: boolean;
   type: LessonType;
   description?: string;
+  videoUrl?: string;
 }
 
 export interface Module {
@@ -14,6 +15,7 @@ export interface Module {
   title: string;
   duration: string;
   lessons: Lesson[];
+
 }
 
 export interface Review {

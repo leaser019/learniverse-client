@@ -16,7 +16,7 @@ import { motion } from 'framer-motion';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { z } from 'zod';
@@ -74,9 +74,15 @@ export default function Login() {
       setLoading(false);
     }
   }
+  useEffect(() => {
+    const userId = localStorage.getItem('userId');
+    if (userId) {
+      router.push('/home');
+    }
+  }, [router]);
 
   return (
-    <div className="flex flex-col lg:flex-row h-auto bg-white overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-auto bg-gray-50 overflow-hidden">
       <div className="h-full w-full flex items-center justify-center">
         <LoginContent />
       </div>
@@ -84,7 +90,7 @@ export default function Login() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="h-full w-full lg:w-3/5 bg-white flex flex-col justify-center"
+        className="h-full w-full lg:w-3/5 bg-gray-50 flex flex-col justify-center"
       >
         <div className="max-w-md mx-auto w-full px-8 md:px-12">
           <div className="text-center">

@@ -1,7 +1,6 @@
 import ReduxProvider from '@/redux/provider';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-import Link from 'next/link';
 import { Toaster } from 'react-hot-toast';
 import './globals.css';
 
@@ -30,11 +29,10 @@ export default function RootLayout({
       <Toaster position="top-center" reverseOrder={false} />
       <html lang="en">
         <body
-          className={`${geistSans.variable} ${geistMono.variable} font-sans bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50`}
+          className={`${geistSans.variable} ${geistMono.variable} font-sans bg-gray-50 dark:bg-slate-900 text-slate-900 dark:text-slate-50`}
         >
           <ReduxProvider>{children}</ReduxProvider>
         </body>
-
       </html>
     </>
   );

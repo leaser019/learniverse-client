@@ -1,8 +1,36 @@
 'use client';
 
+import { Title as Titled } from '@/components/layout/Title';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Progress } from '@/components/ui/progress';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -20,14 +48,19 @@ import {
   Calendar as CalendarIcon,
   Clock,
   GraduationCap,
+  Plus,
   Target,
+  Trash2,
   TrendingUp,
 } from 'lucide-react';
 import moment from 'moment';
-import { FC, useMemo } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 import { Calendar as BigCalendar, momentLocalizer, Views } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Line } from 'react-chartjs-2';
+import { useForm } from 'react-hook-form';
+import toast from 'react-hot-toast';
+import * as z from 'zod';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -71,9 +104,6 @@ const stats: Stat[] = [
   },
 ];
 
-
-
-
 const chartData = {
   labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
   datasets: [
@@ -98,13 +128,13 @@ const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    legend: { 
+    legend: {
       position: 'bottom' as const,
       labels: {
         usePointStyle: true,
         boxWidth: 6,
-        color: '#334155'
-      }
+        color: '#334155',
+      },
     },
     tooltip: {
       backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -118,10 +148,10 @@ const chartOptions = {
       callbacks: {
         labelPointStyle: () => ({
           pointStyle: 'circle',
-          rotation: 0
+          rotation: 0,
         }),
       },
-    }
+    },
   },
   scales: {
     y: {
@@ -131,53 +161,29 @@ const chartOptions = {
       },
       ticks: {
         font: {
-          size: 11
+          size: 11,
         },
-        color: '#64748b'
-      }
+        color: '#64748b',
+      },
     },
     x: {
       grid: {
-        display: false
+        display: false,
       },
       ticks: {
         font: {
-          size: 11
+          size: 11,
         },
-        color: '#64748b'
-      }
-    }
+        color: '#64748b',
+      },
+    },
   },
   elements: {
     line: {
-      borderJoinStyle: 'round'
-    }
-  }
+      borderJoinStyle: 'round',
+    },
+  },
 };
-
-const deadlines = [
-  { id: 1, task: 'Submit JavaScript Assignment', due: '2 days left', priority: 'high' },
-  { id: 2, task: 'React Quiz', due: '5 days left', priority: 'medium' },
-  { id: 3, task: 'Project Review', due: '1 week left', priority: 'low' },
-];
-
-const events = [
-  {
-    title: 'React Study Session',
-    start: new Date(2024, 4, 8, 10, 0),
-    end: new Date(2024, 4, 8, 12, 0),
-  },
-  {
-    title: 'JavaScript Workshop',
-    start: new Date(2024, 4, 9, 14, 0),
-    end: new Date(2024, 4, 9, 16, 0),
-  },
-  {
-    title: 'Group Project Meeting',
-    start: new Date(2024, 4, 10, 9, 0),
-    end: new Date(2024, 4, 10, 11, 0),
-  },
-];
 
 const localizer = momentLocalizer(moment);
 
@@ -188,7 +194,7 @@ const StatsGrid: FC = () => (
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5 }}
   >
-    {stats.map(({ title, value, icon: Icon, gradient, progress,progressColor }) => (
+    {stats.map(({ title, value, icon: Icon, gradient, progress, progressColor }) => (
       <Card
         key={title}
         className={cn(
@@ -205,7 +211,6 @@ const StatsGrid: FC = () => (
             </div>
           </div>
           <div className="text-3xl font-bold mt-2 text-white relative">{value}</div>
-
           {progress && (
             <div className="mt-4 relative">
               <div className="flex justify-between text-xs text-white/90 mb-1">
@@ -221,34 +226,259 @@ const StatsGrid: FC = () => (
   </motion.div>
 );
 
+interface Deadline {
+  id: string;
+  task: string;
+  dueDate: Date;
+  due: string;
+  priority: 'high' | 'medium' | 'low';
+  repeat?: 'none' | 'daily' | 'weekly' | 'monthly';
+  notify: boolean;
+}
+
+interface StudyEvent {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  notes?: string;
+}
+
+const deadlineSchema = z.object({
+  task: z.string().min(1, { message: 'Hãy nhập tên deadline' }),
+  dueDate: z.date(),
+  priority: z.string(),
+  repeat: z.string().optional(),
+  notify: z.boolean().default(true),
+});
+
+const eventSchema = z.object({
+  title: z.string().min(1, { message: 'Hãy nhập tên sự kiện' }),
+  startDate: z.date(),
+  startTime: z.string(),
+  endDate: z.date(),
+  endTime: z.string(),
+  notes: z.string().optional(),
+});
+
 const Dashboard: FC = () => {
   const memoChartData = useMemo(() => chartData, []);
   const memoChartOptions = useMemo(() => chartOptions, []);
 
+  const [username, setUsername] = useState<string>('learner1');
+  const [deadlines, setDeadlines] = useState<Deadline[]>([]);
+  const [events, setEvents] = useState<StudyEvent[]>([]);
+
+  const [isDeadlineDialogOpen, setIsDeadlineDialogOpen] = useState(false);
+  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
+
+  const deadlineForm = useForm({
+    resolver: zodResolver(deadlineSchema),
+    defaultValues: {
+      task: '',
+      priority: 'medium',
+      repeat: 'none',
+      notify: true,
+    },
+  });
+
+  const eventForm = useForm<z.infer<typeof eventSchema>>({
+    resolver: zodResolver(eventSchema),
+    defaultValues: {
+      title: '',
+      startTime: '09:00',
+      endTime: '10:00',
+      notes: '',
+    },
+  });
+
+  useEffect(() => {
+    const storedDeadlines = localStorage.getItem(`deadline_${username}`);
+    if (storedDeadlines) {
+      const parsedDeadlines = JSON.parse(storedDeadlines);
+      const formattedDeadlines = parsedDeadlines.map((d: any) => ({
+        ...d,
+        dueDate: new Date(d.dueDate),
+      }));
+      setDeadlines(formattedDeadlines);
+
+      // Xử lý các deadline định kỳ đã quá hạn
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      let newDeadlines: Deadline[] = [];
+      let needsUpdate = false;
+
+      formattedDeadlines.forEach((deadline: Deadline) => {
+        if (deadline.repeat && deadline.repeat !== 'none' && deadline.dueDate < today) {
+          needsUpdate = true;
+
+          // Tạo deadline mới dựa trên chu kỳ lặp lại
+          const newDate = new Date(deadline.dueDate);
+
+          if (deadline.repeat === 'daily') {
+            newDate.setDate(today.getDate());
+          } else if (deadline.repeat === 'weekly') {
+            newDate.setDate(today.getDate() + ((7 - today.getDay() + newDate.getDay()) % 7));
+          } else if (deadline.repeat === 'monthly') {
+            newDate.setMonth(today.getMonth());
+            newDate.setDate(
+              Math.min(
+                newDate.getDate(),
+                new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()
+              )
+            );
+          }
+
+          if (newDate <= today) {
+            if (deadline.repeat === 'daily') {
+              newDate.setDate(today.getDate() + 1);
+            } else if (deadline.repeat === 'weekly') {
+              newDate.setDate(today.getDate() + 7);
+            } else if (deadline.repeat === 'monthly') {
+              newDate.setMonth(today.getMonth() + 1);
+            }
+          }
+
+          const updatedDeadline: Deadline = {
+            ...deadline,
+            id: Date.now() + Math.random().toString(),
+            dueDate: newDate,
+            due: calculateDueText(newDate),
+          };
+
+          newDeadlines.push(updatedDeadline);
+        }
+      });
+
+      if (needsUpdate) {
+        const updatedDeadlines = [...formattedDeadlines, ...newDeadlines];
+        setDeadlines(updatedDeadlines);
+        localStorage.setItem(`deadline_${username}`, JSON.stringify(updatedDeadlines));
+      }
+    }
+
+    const storedEvents = localStorage.getItem(`calendar_${username}`);
+    if (storedEvents) {
+      const parsedEvents = JSON.parse(storedEvents);
+      const formattedEvents = parsedEvents.map((e: any) => ({
+        ...e,
+        start: new Date(e.start),
+        end: new Date(e.end),
+      }));
+      setEvents(formattedEvents);
+    }
+  }, [username]);
+
+  const calculateDueText = (date: Date): string => {
+    const today = new Date();
+    const diffTime = date.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) return 'Quá hạn';
+    if (diffDays === 0) return 'Hôm nay';
+    if (diffDays === 1) return 'Ngày mai';
+    if (diffDays < 7) return `${diffDays} ngày nữa`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} tuần nữa`;
+    return `${Math.floor(diffDays / 30)} tháng nữa`;
+  };
+
+  const combineDateTime = (date: Date, timeString: string): Date => {
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const result = new Date(date);
+    result.setHours(hours, minutes, 0, 0);
+    return result;
+  };
+
+  const onSubmitDeadline = (data: z.infer<typeof deadlineSchema>) => {
+    const newDeadline: Deadline = {
+      id: Date.now().toString(),
+      task: data.task,
+      dueDate: data.dueDate,
+      due: calculateDueText(data.dueDate),
+      priority: data.priority as 'high' | 'medium' | 'low',
+      repeat: data.repeat as 'none' | 'daily' | 'weekly' | 'monthly',
+      notify: data.notify,
+    };
+
+    const updatedDeadlines = [...deadlines, newDeadline];
+    setDeadlines(updatedDeadlines);
+    localStorage.setItem(`deadline_${username}`, JSON.stringify(updatedDeadlines));
+
+    toast.success('Deadline đã được thêm');
+
+    deadlineForm.reset();
+    setIsDeadlineDialogOpen(false);
+  };
+
+  // Thêm function để xử lý deadline tự động lặp lại
+  const translateRepeat = (repeat: string): string => {
+    switch (repeat) {
+      case 'daily':
+        return 'hàng ngày';
+      case 'weekly':
+        return 'hàng tuần';
+      case 'monthly':
+        return 'hàng tháng';
+      default:
+        return '';
+    }
+  };
+
+  const onSubmitEvent = (data: z.infer<typeof eventSchema>) => {
+    const startDateTime = combineDateTime(data.startDate, data.startTime);
+    const endDateTime = combineDateTime(data.endDate, data.endTime);
+
+    if (endDateTime <= startDateTime) {
+      toast.error('Lỗi thời gian');
+      return;
+    }
+
+    const newEvent: StudyEvent = {
+      id: Date.now().toString(),
+      title: data.title,
+      start: startDateTime,
+      end: endDateTime,
+      notes: data.notes,
+    };
+
+    const updatedEvents = [...events, newEvent];
+    setEvents(updatedEvents);
+    localStorage.setItem(`calendar_${username}`, JSON.stringify(updatedEvents));
+
+    toast.success('Sự kiện học tập đã được thêm');
+
+    eventForm.reset();
+    setIsEventDialogOpen(false);
+  };
+
+  const deleteDeadline = (id: string) => {
+    const updatedDeadlines = deadlines.filter((d) => d.id !== id);
+    setDeadlines(updatedDeadlines);
+    localStorage.setItem(`deadline_${username}`, JSON.stringify(updatedDeadlines));
+
+    toast.success('Deadline đã bị xóa');
+  };
+
+  const deleteEvent = (id: string) => {
+    const updatedEvents = events.filter((e) => e.id !== id);
+    setEvents(updatedEvents);
+    localStorage.setItem(`calendar_${username}`, JSON.stringify(updatedEvents));
+
+    toast.success('Sự kiện đã bị xóa');
+  };
+
   return (
     <div className="container mx-auto py-8 space-y-8 px-4 sm:px-6 bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/20 min-h-screen rounded-xl">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative"
-      >
-        <span className="absolute -left-2 -top-2 w-12 h-12 rounded-full bg-blue-100/50 blur-2xl"></span>
-        <span className="absolute right-1/4 bottom-0 w-20 h-8 rounded-full bg-indigo-100/60 blur-xl"></span>
-        <div className="text-center justify-center my-10">
-          <h1 className="text-2xl md:text-3xl font-bold mb-2 text-blue-800">
-            Learning Dashboard
-          </h1>
-          <p className="text-blue-600/80 mb-8 relative">
-            Track your progress and upcoming study sessions
-          </p>
-        </div>
-      </motion.div>
+      <Titled
+        title="Learning Dashboard"
+        description="Track your progress and upcoming study sessions"
+      />
 
       <StatsGrid />
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card className="overflow-hidden border-0 rounded-xlshadow-blue-200 hover:shadow-blue-500 transition-all duration-300 relative">
+        <Card className="overflow-hidden border-0 rounded-xl shadow-blue-200 hover:shadow-blue-500 transition-all duration-300 relative">
           <div className="bg-gradient-to-r px-5 py-4 relative">
             <CardTitle className="text-blue-500 flex items-center gap-2 text-lg font-medium relative">
               <TrendingUp className="h-5 w-5" />
@@ -262,57 +492,407 @@ const Dashboard: FC = () => {
 
         <Card className="overflow-hidden border-0 rounded-xl shadow-blue-200 hover:shadow-blue-500 transition-all duration-300 relative">
           <span className="absolute -left-4 -top-4 w-20 h-20 rounded-full bg-blue-100/30 blur-xl"></span>
-          <div className="bg-gradient-to-r   px-5 py-4 relative">
-            <CardTitle className="text-blue-500 flex items-center gap-2 text-lg font-medium relative">
-              <Clock className="h-5 w-5" />
-              Upcoming Deadlines
-            </CardTitle>
+          <div className="bg-gradient-to-r px-5 py-4 relative">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-blue-500 flex items-center gap-2 text-lg font-medium relative">
+                <Clock className="h-5 w-5" />
+                Upcoming Deadlines
+              </CardTitle>
+              <Dialog open={isDeadlineDialogOpen} onOpenChange={setIsDeadlineDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex items-center gap-1 border-blue-200"
+                  >
+                    <Plus className="h-4 w-4" /> Thêm
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Thêm deadline mới</DialogTitle>
+                  </DialogHeader>
+                  <Form {...deadlineForm}>
+                    <form
+                      onSubmit={deadlineForm.handleSubmit(onSubmitDeadline)}
+                      className="space-y-4"
+                    >
+                      <FormField
+                        control={deadlineForm.control}
+                        name="task"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Tên deadline</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Nhập tên deadline" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={deadlineForm.control}
+                        name="dueDate"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel>Ngày hết hạn</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant={'outline'}
+                                    className={cn(
+                                      'pl-3 text-left font-normal',
+                                      !field.value && 'text-muted-foreground'
+                                    )}
+                                  >
+                                    {field.value ? (
+                                      moment(field.value).format('DD/MM/YYYY')
+                                    ) : (
+                                      <span>Chọn ngày</span>
+                                    )}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value}
+                                  onSelect={field.onChange}
+                                  disabled={(date) =>
+                                    date < new Date(new Date().setHours(0, 0, 0, 0))
+                                  }
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={deadlineForm.control}
+                        name="priority"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Mức độ ưu tiên</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Chọn mức độ ưu tiên" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="high">Cao</SelectItem>
+                                <SelectItem value="medium">Trung bình</SelectItem>
+                                <SelectItem value="low">Thấp</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={deadlineForm.control}
+                        name="repeat"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Lặp lại</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value || 'none'}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Không lặp lại" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="none">Không lặp lại</SelectItem>
+                                <SelectItem value="daily">Hàng ngày</SelectItem>
+                                <SelectItem value="weekly">Hàng tuần</SelectItem>
+                                <SelectItem value="monthly">Hàng tháng</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={deadlineForm.control}
+                        name="notify"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                            <FormControl>
+                              <input
+                                type="checkbox"
+                                checked={field.value}
+                                onChange={field.onChange}
+                                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>Nhận thông báo</FormLabel>
+                              <p className="text-sm text-gray-500">
+                                Hiển thị nhắc nhở khi deadline gần đến
+                              </p>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="flex justify-end space-x-2 pt-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setIsDeadlineDialogOpen(false)}
+                        >
+                          Hủy
+                        </Button>
+                        <Button type="submit">Lưu deadline</Button>
+                      </div>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
           <CardContent className="pt-6 pb-4 px-0 bg-white relative">
             <ul className="space-y-3 px-5">
-              {deadlines.map(({ id, task, due, priority }) => (
-                <li
-                  key={id}
-                  className="flex justify-between items-center p-3.5 bg-gradient-to-r from-slate-50 to-white rounded-lg border-l-4 hover:translate-x-1 hover:shadow-md transition-all duration-300"
-                  style={{
-                    borderLeftColor:
-                      priority === 'high'
-                        ? '#e11d48'
-                        : priority === 'medium'
-                        ? '#8b5cf6'
-                        : '#3b82f6',
-                  }}
-                >
-                  <div className="flex items-center">
-                    <div
-                      className="w-2.5 h-2.5 rounded-full mr-3 animate-pulse"
+              {deadlines.length > 0 ? (
+                deadlines
+                  .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
+                  .map((deadline) => (
+                    <li
+                      key={deadline.id}
+                      className="flex justify-between items-center p-3.5 bg-gradient-to-r from-slate-50 to-white rounded-lg border-l-4 hover:translate-x-1 hover:shadow-md transition-all duration-300 group"
                       style={{
-                        backgroundColor:
-                          priority === 'high'
+                        borderLeftColor:
+                          deadline.priority === 'high'
                             ? '#e11d48'
-                            : priority === 'medium'
+                            : deadline.priority === 'medium'
                             ? '#8b5cf6'
                             : '#3b82f6',
                       }}
-                    />
-                    <span className="font-medium text-slate-700">{task}</span>
-                  </div>
-                  <span className="text-xs py-1.5 px-3 bg-white rounded-full shadow-sm text-slate-600 font-medium border border-slate-100 ring-1 ring-slate-100/80">
-                    {due}
-                  </span>
+                    >
+                      <div className="flex items-center">
+                        <div
+                          className="w-2.5 h-2.5 rounded-full mr-3 animate-pulse"
+                          style={{
+                            backgroundColor:
+                              deadline.priority === 'high'
+                                ? '#e11d48'
+                                : deadline.priority === 'medium'
+                                ? '#8b5cf6'
+                                : '#3b82f6',
+                          }}
+                        />
+                        <span className="font-medium text-slate-700">{deadline.task}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs py-1.5 px-3 bg-white rounded-full shadow-sm text-slate-600 font-medium border border-slate-100 ring-1 ring-slate-100/80">
+                          {deadline.due}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => deleteDeadline(deadline.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                    </li>
+                  ))
+              ) : (
+                <li className="p-8 text-center text-slate-500">
+                  Chưa có deadline nào. Hãy thêm deadline mới!
                 </li>
-              ))}
+              )}
             </ul>
           </CardContent>
         </Card>
       </div>
 
       <Card className="overflow-hidden border-0 rounded-xl shadow-blue-200 hover:shadow-blue-500 transition-all duration-300 relative">
-        <div className="rounded-xl bg-gradient-to-r  relative px-10 ">
+        <div className="rounded-xl bg-gradient-to-r relative px-5 py-4 flex justify-between items-center">
           <CardTitle className="text-blue-500 text-lg flex items-center gap-2 font-medium relative">
             <CalendarIcon className="h-5 w-5" />
             Study Calendar
           </CardTitle>
+          <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
+            <DialogTrigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex items-center gap-1 border-blue-200"
+              >
+                <Plus className="h-4 w-4" /> Thêm sự kiện
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Thêm sự kiện học tập</DialogTitle>
+              </DialogHeader>
+              <Form {...eventForm}>
+                <form onSubmit={eventForm.handleSubmit(onSubmitEvent)} className="space-y-4">
+                  <FormField
+                    control={eventForm.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tên sự kiện</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nhập tên sự kiện" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={eventForm.control}
+                      name="startDate"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Ngày bắt đầu</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant={'outline'}
+                                  className={cn(
+                                    'pl-3 text-left font-normal',
+                                    !field.value && 'text-muted-foreground'
+                                  )}
+                                >
+                                  {field.value ? (
+                                    moment(field.value).format('DD/MM/YYYY')
+                                  ) : (
+                                    <span>Chọn ngày</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={eventForm.control}
+                      name="startTime"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Giờ bắt đầu</FormLabel>
+                          <FormControl>
+                            <Input type="time" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={eventForm.control}
+                      name="endDate"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Ngày kết thúc</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant={'outline'}
+                                  className={cn(
+                                    'pl-3 text-left font-normal',
+                                    !field.value && 'text-muted-foreground'
+                                  )}
+                                >
+                                  {field.value ? (
+                                    moment(field.value).format('DD/MM/YYYY')
+                                  ) : (
+                                    <span>Chọn ngày</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={eventForm.control}
+                      name="endTime"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Giờ kết thúc</FormLabel>
+                          <FormControl>
+                            <Input type="time" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={eventForm.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ghi chú (tùy chọn)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Thêm ghi chú cho sự kiện" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="flex justify-end space-x-2 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsEventDialogOpen(false)}
+                    >
+                      Hủy
+                    </Button>
+                    <Button type="submit">Lưu sự kiện</Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
         </div>
         <CardContent className="p-5 pt-6 bg-white relative">
           <div className="h-[400px] calendar-container">
@@ -339,7 +919,198 @@ const Dashboard: FC = () => {
                   borderRadius: '6px',
                 },
               })}
+              onSelectEvent={(event) => {
+                if (confirm(`Bạn có muốn xóa sự kiện "${event.title}"?`)) {
+                  deleteEvent((event as StudyEvent).id);
+                }
+              }}
+              tooltipAccessor={(event) => (event as StudyEvent).notes || event.title}
             />
+          </div>
+
+          <div className="flex justify-between items-center mt-4 pt-4 border-t border-blue-100">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const data = {
+                    events: events,
+                    deadlines: deadlines,
+                  };
+                  const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `learniverse_data_${new Date().toISOString().split('T')[0]}.json`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+
+                  toast({
+                    title: 'Dữ liệu đã được xuất',
+                    description: 'Tất cả deadline và sự kiện đã được lưu vào file JSON',
+                  });
+                }}
+                className="text-blue-600 border-blue-200"
+              >
+                Xuất dữ liệu
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = '.json';
+                  input.onchange = (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        try {
+                          const data = JSON.parse(event.target?.result as string);
+
+                          if (data.events && Array.isArray(data.events)) {
+                            const formattedEvents = data.events.map((e: any) => ({
+                              ...e,
+                              start: new Date(e.start),
+                              end: new Date(e.end),
+                            }));
+                            setEvents(formattedEvents);
+                            localStorage.setItem(
+                              `calendar_${username}`,
+                              JSON.stringify(formattedEvents)
+                            );
+                          }
+
+                          if (data.deadlines && Array.isArray(data.deadlines)) {
+                            const formattedDeadlines = data.deadlines.map((d: any) => ({
+                              ...d,
+                              dueDate: new Date(d.dueDate),
+                            }));
+                            setDeadlines(formattedDeadlines);
+                            localStorage.setItem(
+                              `deadline_${username}`,
+                              JSON.stringify(formattedDeadlines)
+                            );
+                          }
+
+                          toast({
+                            title: 'Dữ liệu đã được nhập',
+                            description: 'Tất cả deadline và sự kiện đã được khôi phục',
+                          });
+                        } catch (error) {
+                          toast({
+                            title: 'Lỗi khi nhập dữ liệu',
+                            description: 'File không hợp lệ hoặc bị hỏng',
+                            variant: 'destructive',
+                          });
+                        }
+                      };
+                      reader.readAsText(file);
+                    }
+                  };
+                  input.click();
+                }}
+                className="text-blue-600 border-blue-200"
+              >
+                Nhập dữ liệu
+              </Button>
+            </div>
+
+            <div className="flex gap-2">
+              <Select
+                onValueChange={(value) => {
+                  const filteredEvents = events.filter((event) => {
+                    const eventDate = new Date(event.start);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+
+                    if (value === 'today') {
+                      const eventDay = new Date(eventDate);
+                      eventDay.setHours(0, 0, 0, 0);
+                      return eventDay.getTime() === today.getTime();
+                    } else if (value === 'week') {
+                      const nextWeek = new Date(today);
+                      nextWeek.setDate(today.getDate() + 7);
+                      return eventDate >= today && eventDate <= nextWeek;
+                    } else if (value === 'month') {
+                      const nextMonth = new Date(today);
+                      nextMonth.setMonth(today.getMonth() + 1);
+                      return eventDate >= today && eventDate <= nextMonth;
+                    }
+                    return true;
+                  });
+
+                  if (value === 'all') {
+                    const storedEvents = localStorage.getItem(`calendar_${username}`);
+                    if (storedEvents) {
+                      const parsedEvents = JSON.parse(storedEvents);
+                      const formattedEvents = parsedEvents.map((e: any) => ({
+                        ...e,
+                        start: new Date(e.start),
+                        end: new Date(e.end),
+                      }));
+                      setEvents(formattedEvents);
+                    }
+                  } else {
+                    setEvents(filteredEvents);
+                  }
+                }}
+              >
+                <SelectTrigger className="w-[150px] h-9 text-xs">
+                  <SelectValue placeholder="Lọc sự kiện" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tất cả sự kiện</SelectItem>
+                  <SelectItem value="today">Hôm nay</SelectItem>
+                  <SelectItem value="week">Tuần này</SelectItem>
+                  <SelectItem value="month">Tháng này</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Input
+                placeholder="Tìm kiếm sự kiện..."
+                className="w-[200px] h-9 text-xs"
+                onChange={(e) => {
+                  const searchTerm = e.target.value.toLowerCase();
+                  if (!searchTerm.trim()) {
+                    const storedEvents = localStorage.getItem(`calendar_${username}`);
+                    if (storedEvents) {
+                      const parsedEvents = JSON.parse(storedEvents);
+                      const formattedEvents = parsedEvents.map((e: any) => ({
+                        ...e,
+                        start: new Date(e.start),
+                        end: new Date(e.end),
+                      }));
+                      setEvents(formattedEvents);
+                    }
+                    return;
+                  }
+
+                  const storedEvents = localStorage.getItem(`calendar_${username}`);
+                  if (storedEvents) {
+                    const parsedEvents = JSON.parse(storedEvents);
+                    const formattedEvents = parsedEvents.map((e: any) => ({
+                      ...e,
+                      start: new Date(e.start),
+                      end: new Date(e.end),
+                    }));
+
+                    const filteredEvents = formattedEvents.filter(
+                      (event: StudyEvent) =>
+                        event.title.toLowerCase().includes(searchTerm) ||
+                        (event.notes && event.notes.toLowerCase().includes(searchTerm))
+                    );
+
+                    setEvents(filteredEvents);
+                  }
+                }}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -454,7 +1225,53 @@ const Dashboard: FC = () => {
           color: #64748b;
           font-size: 15px;
         }
+
+        @keyframes bounce-slow {
+          0%,
+          100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-5px);
+          }
+        }
+
+        .animate-bounce-slow {
+          animation: bounce-slow 3s infinite;
+        }
       `}</style>
+
+      {/* Thêm component thông báo */}
+      <div className="fixed bottom-4 right-4 z-50 flex flex-col-reverse gap-2">
+        {deadlines
+          .filter((d) => {
+            const daysUntilDue = Math.ceil(
+              (d.dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+            );
+            return daysUntilDue >= 0 && daysUntilDue <= 2;
+          })
+          .slice(0, 3)
+          .map((deadline) => (
+            <div
+              key={`notify-${deadline.id}`}
+              className={`p-4 rounded-lg shadow-lg border-l-4 max-w-sm animate-bounce-slow bg-white transition-all duration-300 ${
+                deadline.priority === 'high'
+                  ? 'border-red-500'
+                  : deadline.priority === 'medium'
+                  ? 'border-purple-500'
+                  : 'border-blue-500'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-blue-500" />
+                <p className="font-medium text-slate-700">{deadline.task}</p>
+              </div>
+              <p className="text-sm text-slate-500 mt-1">
+                {deadline.due === 'Hôm nay' ? 'Đến hạn hôm nay 📢' : `Còn ${deadline.due} 🔔`}
+              </p>
+            </div>
+          ))}
+      </div>
     </div>
   );
 };
