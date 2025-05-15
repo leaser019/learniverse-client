@@ -3,16 +3,28 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from '@/components/ui/navigation-menu'
 import { cn } from '@/lib/utils'
-import { motion } from 'framer-motion'
-import { BrainIcon, FlaskConicalIcon, HomeIcon, LogOut, Menu, RocketIcon, Settings, UsersIcon } from 'lucide-react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { UserData } from '@/types/Users';
+import { motion } from 'framer-motion';
+import {
+  BrainIcon,
+  FlaskConicalIcon,
+  HomeIcon,
+  LogOut,
+  Menu,
+  RocketIcon,
+  Settings,
+  UsersIcon,
+} from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
-   
+  const userData: UserData = JSON.parse(localStorage.getItem('userData') || '{}');
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
   const pathname = usePathname();
 
   const navItems = [
@@ -21,17 +33,17 @@ export const Navbar = () => {
     { name: 'Study', path: '/my-space', icon: BrainIcon },
     { name: 'Connect', path: '/community', icon: UsersIcon },
     { name: 'Lab', path: '/lab', icon: FlaskConicalIcon },
-  ]
+  ];
 
-   useEffect(() => {
-     const handleScroll = () => setScrolled(window.scrollY > 20);
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
 
-     window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll);
 
-     return () => {
-       window.removeEventListener('scroll', handleScroll);
-     };
-   }, []);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   return (
     <motion.nav
@@ -67,7 +79,9 @@ export const Navbar = () => {
                     <NavigationMenuLink
                       className={cn(
                         'flex items-center gap-2 px-4 py-2 rounded-md transition-all my-1',
-                        pathname === item.path ? 'text-blue-500 hover:text-blue-700 bg-blue-50' : 'bg-transparent text-gray-600',
+                        pathname === item.path
+                          ? 'text-blue-500 hover:text-blue-700 bg-blue-50'
+                          : 'bg-transparent text-gray-600',
                         'hover:bg-blue-100 hover:text-blue-600',
                         'focus:outline-none focus:ring-2 focus:ring-blue-100'
                       )}
@@ -76,7 +90,7 @@ export const Navbar = () => {
                         <item.icon
                           className={cn(
                             'w-6 h-6',
-                            "hover:text-blue-600",
+                            'hover:text-blue-600',
                             pathname === item.path ? 'text-blue-500' : 'text-gray-600'
                           )}
                         />
@@ -96,9 +110,9 @@ export const Navbar = () => {
               <DropdownMenuTrigger className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-blue-50 transition-all">
                 <Avatar>
                   <AvatarImage src="https://github.com/shadcn.png" />
-                  <AvatarFallback>CN</AvatarFallback>
+                  <AvatarFallback>{userData?.username}</AvatarFallback>
                 </Avatar>
-                <span className="font-medium">John Doe</span>
+                <span className="font-medium">{userData?.username}</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem>
@@ -140,11 +154,11 @@ export const Navbar = () => {
               <div className="flex items-center gap-3 px-4 py-3">
                 <Avatar>
                   <AvatarImage src="https://github.com/shadcn.png" />
-                  <AvatarFallback>CN</AvatarFallback>
+                  <AvatarFallback>{userData?.username}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium">John Doe</p>
-                  <p className="text-sm text-gray-500">john@example.com</p>
+                  <p className="font-medium">{userData?.username}</p>
+                  <p className="text-sm text-gray-500">{userData?.email}</p>
                 </div>
               </div>
             </div>
@@ -153,6 +167,6 @@ export const Navbar = () => {
       )}
     </motion.nav>
   );
-}
+};
 
 export default Navbar

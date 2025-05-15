@@ -12,7 +12,7 @@ const Home = () => {
       router.push(`/login`);
     }
   }, [router]);
-  return <div></div>;
+  return <div className="bg-gray-50"></div>;
 };
 
 export default Home;

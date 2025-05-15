@@ -38,11 +38,13 @@ export default function PublicLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sms pb-5">
         <Navbar />
       </header>
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-16 py-8 mt-10">{children}</main>
+      <main className="container mt-10 mx-auto px-14 sm:px-16 lg:px-18 pt-20 pb-12">
+        {children}
+      </main>
     </div>
   );
 }

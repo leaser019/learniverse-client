@@ -1,24 +1,24 @@
 "use client";
 
-import { CourseCard } from "@/components/course/CourseCard";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent
-} from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { courses } from "@/data/course";
-import { Course } from "@/types/course";
-import { motion } from "framer-motion";
+import { courses } from '@/data/course';
+import { Course } from '@/types/course';
+import { motion } from 'framer-motion';
 import {
   BookOpen,
   Calendar,
   Check,
   ChevronLeft,
-  ChevronRight,
   Clock,
   Globe,
   Heart,
@@ -31,36 +31,38 @@ import {
   Star,
   Target,
   Users,
-  Zap
-} from "lucide-react";
-import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-
-
+  Zap,
+} from 'lucide-react';
+import Image from 'next/image';
+import { useParams, useRouter } from 'next/navigation';
+import * as React from 'react';
+import { useEffect, useState } from 'react';
 
 const CourseDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const router  = useRouter();
+  const router = useRouter();
 
-  const [course, setCourse]               = useState<Course | null>(null);
-  const [activeTab, setActiveTab]         = useState<"overview" | "curriculum" | "instructor" | "reviews" | "faq">("overview");
-  const [isLoading, setIsLoading]         = useState(true);
-  const [wishlisted, setWishlisted]       = useState(false);
+  const [course, setCourse] = useState<Course | null>(null);
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'curriculum' | 'instructor' | 'reviews' | 'faq'
+  >('overview');
+  const [isLoading, setIsLoading] = useState(true);
+  const [wishlisted, setWishlisted] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState<any>(null);
 
   useEffect(() => {
     setIsLoading(true);
-    const c = courses.find(c => c.id === id) ?? null;
+    const c = courses.find((c) => c.id === id) ?? null;
     setTimeout(() => {
       setCourse(c);
       setIsLoading(false);
     }, 500);
   }, [id]);
 
-  const backToExplore  = () => router.push("/explore");
-  const selectLesson   = (lesson: any) =>
-    lesson.type === "video" && (setSelectedLesson(lesson), window.scrollTo({ top: 0, behavior: "smooth" }));
+  const backToExplore = () => router.push('/explore');
+  const selectLesson = (lesson: any) =>
+    lesson.type === 'video' &&
+    (setSelectedLesson(lesson), window.scrollTo({ top: 0, behavior: 'smooth' }));
 
   if (isLoading)
     return (
@@ -80,17 +82,19 @@ const CourseDetail = () => {
       </div>
     );
 
-  const discounted     = course.price * (1 - course.discount);
-  const discountPct    = Math.round(course.discount * 100);
-  const priceStr       = `${discounted.toLocaleString()}₫`;
-  const originalStr    = `${course.originalPrice?.toLocaleString() ?? course.price.toLocaleString()}₫`;
+  const discounted = course.price * (1 - course.discount);
+  const discountPct = Math.round(course.discount * 100);
+  const priceStr = `${discounted?.toLocaleString()}₫`;
+  const originalStr = `${
+    course.originalPrice?.toLocaleString() ?? course.price?.toLocaleString()
+  }₫`;
 
   return (
     <div className="min-h-screen pt-10 bg-gray-50">
       {/* hero */}
       <section className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg">
         <div className="container mx-auto max-w-screen-xl py-8">
-          <div className="flex flex-col gap-8 lg:flex-row">
+          <div className="flex flex-col gap-8 lg:flex-row sm:m-6">
             {/* left info */}
             <div className="flex-1">
               <button
@@ -98,7 +102,7 @@ const CourseDetail = () => {
                 className="mb-6 inline-flex items-center gap-1 text-blue-200 transition-colors hover:text-white"
               >
                 <ChevronLeft size={18} />
-                Back to explore
+                Back to Explore
               </button>
 
               <motion.h1
@@ -115,11 +119,11 @@ const CourseDetail = () => {
                 <span className="flex items-center">
                   <Star className="mr-1 fill-amber-400 text-amber-400" size={18} />
                   <span className="font-bold text-white">{course.rating.toFixed(1)}</span>
-                  <span className="mx-1">({course.reviewCount.toLocaleString()} reviews)</span>
+                  <span className="mx-1">({course.reviewCount?.toLocaleString()} reviews)</span>
                 </span>
                 <span className="flex items-center gap-1">
                   <Users size={18} />
-                  {course.enrollmentCount.toLocaleString()} students
+                  {course.enrollmentCount?.toLocaleString()} students
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar size={18} />
@@ -147,23 +151,28 @@ const CourseDetail = () => {
 
               {/* action buttons (desktop) */}
               <div className="hidden gap-4 lg:flex">
-                <Button size="lg" className="gap-2 bg-white text-blue-600 hover:bg-blue-50">
+                {' '}
+                <Button
+                  size="lg"
+                  className="gap-2 bg-white hover:border-white text-blue-600 hover:bg-blue-600 hover:text-white shadow-lg"
+                  onClick={() => router.push(`/explore/${course.id}/learn`)}
+                >
                   <PlayCircle size={20} />
-                  Watch intro
+                  Watch Introduction
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
-                  className="gap-2 border-white text-white hover:bg-white/20"
+                  className="gap-2 border-white text-red-500 hover:text-white hover:bg-red-500"
                   onClick={() => setWishlisted(!wishlisted)}
                 >
-                  <Heart size={20} className={wishlisted ? 'fill-red-500 text-red-500' : ''} />
-                  {wishlisted ? 'Saved' : 'Save course'}
+                  <Heart size={20} className={wishlisted ? 'fill-red text-red' : ''} />
+                  {wishlisted ? 'Saved' : 'Save Course'}
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
-                  className="gap-2 border-white text-white hover:bg-white/20"
+                  className="gap-2 border-white text-green-400 hover:bg-green-400 hover:text-white"
                 >
                   <Share2 size={20} />
                   Share
@@ -213,7 +222,6 @@ const CourseDetail = () => {
                     </>
                   )}
                 </div>
-
                 {/* mini facts */}
                 <div className="mb-6 grid grid-cols-2 gap-4">
                   <Fact icon={Clock} label="Duration" value={course.duration} />
@@ -225,27 +233,33 @@ const CourseDetail = () => {
                     value={course.modules.reduce((n, m) => n + m.lessons.length, 0)}
                   />
                 </div>
-
-                {/* cta */}
+                {/* cta */}{' '}
                 <div className="space-y-3">
-                  <Button size="lg" className="w-full gap-2 py-6 text-lg">
+                  <Button
+                    size="lg"
+                    className="w-full gap-2 py-6 text-lg"
+                    onClick={() => router.push(`/explore/${course.id}/learn`)}
+                  >
                     <ShieldCheck size={20} />
-                    Enroll now
+                    Start Learning Now
                   </Button>
-                  <Button variant="outline" className="w-full">
-                    Free preview
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => selectedLesson && router.push(`/explore/${course.id}/learn`)}
+                  >
+                    View Free Lesson
                   </Button>
                 </div>
-
                 {/* guarantees */}
                 <div className="mt-6 text-center text-sm text-gray-500">
                   <p className="mb-1 flex items-center justify-center gap-1">
                     <ShieldCheck size={16} className="text-green-600" />
-                    30-day money-back guarantee
+                    30-day Money-back Guarantee
                   </p>
                   <p className="flex items-center justify-center gap-1">
                     <Globe size={16} className="text-blue-600" />
-                    Lifetime access
+                    Lifetime Access
                   </p>
                 </div>
               </div>
@@ -259,14 +273,14 @@ const CourseDetail = () => {
         <div className="flex flex-col gap-8 lg:flex-row">
           <div className="lg:w-2/3">
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="mb-8">
-              <TabsList className="mb-6 w-full justify-start rounded-lg bg-white p-1">
-                <TabsTrigger value="overview" className="flex-1">
+              <TabsList className="mb-6 w-full justify-start rounded-lg bg-white p-1 shadow-md shadow-blue-500/5">
+                <TabsTrigger value="overview" className="flex-1 ">
                   Overview
                 </TabsTrigger>
-                <TabsTrigger value="curriculum" className="flex-1">
+                <TabsTrigger value="curriculum" className="flex-1 ">
                   Curriculum
                 </TabsTrigger>
-                <TabsTrigger value="instructor" className="flex-1">
+                <TabsTrigger value="instructor" className="flex-1 ">
                   Instructor
                 </TabsTrigger>
                 <TabsTrigger value="reviews" className="flex-1">
@@ -395,7 +409,7 @@ const CourseDetail = () => {
                     <Star className="text-amber-400" size={24} />
                     <span className="text-3xl font-bold">{course.rating.toFixed(1)}</span>
                     <span className="text-gray-500">
-                      ({course.reviewCount.toLocaleString()} reviews)
+                      ({course.reviewCount?.toLocaleString()} reviews)
                     </span>
                   </div>
 
@@ -475,10 +489,9 @@ const CourseDetail = () => {
           </div>
           {/* right sidebar – downloads & certificate */}
           {/* …translated sidebar code identical structurally… */}
-        </div>
-
+        </div>{' '}
         {/* related courses */}
-        <RelatedCourses current={course} />
+        {/* Có thể bật tính năng này lên khi cần */}
       </section>
     </div>
   );
@@ -486,7 +499,15 @@ const CourseDetail = () => {
 
 /* ───────────────── helper components ─────────────── */
 
-const Fact = ({ icon: Icon, label, value }: { icon: any; label: string; value: string | number }) => (
+const Fact = ({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: any;
+  label: string;
+  value: string | number;
+}) => (
   <div className="flex items-center gap-2">
     <Icon size={18} className="text-blue-600" />
     <div>
@@ -510,6 +531,8 @@ const CheckItem = ({ text }: { text: string }) => (
   </li>
 );
 
+type LessonType = 'video' | 'exercise' | 'quiz' | 'project' | 'challenge';
+
 const LessonRow = ({
   lesson,
   index,
@@ -525,12 +548,16 @@ const LessonRow = ({
     quiz: Target,
     project: LayoutGrid,
     challenge: Zap,
-  }[lesson.type] as any;
-
+  }[lesson.type as LessonType];
   return (
-    <div onClick={() => onSelect(lesson)} className={`flex cursor-pointer items-center justify-between rounded-lg p-3 ${lesson.isFree ? "hover:bg-blue-50" : "hover:bg-gray-50"}`}>
+    <div
+      onClick={() => onSelect(lesson)}
+      className={`flex cursor-pointer items-center justify-between rounded-lg p-3 ${
+        lesson.isFree ? 'hover:bg-blue-50' : 'hover:bg-gray-50'
+      }`}
+    >
       <div className="flex items-center gap-3">
-        {icon && ( <icon size={18} className="text-blue-600" /> )}
+        {icon && React.createElement(icon, { size: 18, className: 'text-blue-600' })}
         <p className="font-medium">
           {index} {lesson.title}
         </p>
@@ -553,32 +580,5 @@ const PlaceholderCard = ({ text, button }: { text: string; button: string }) => 
     <Button variant="outline">{button}</Button>
   </div>
 );
-
-const RelatedCourses = ({ current }: { current: Course }) => {
-  const router = useRouter();
-  return (
-  <div className="mt-16">
-    <div className="mb-8 flex items-center justify-between">
-      <h2 className="text-2xl font-bold">Related courses</h2>
-      <div className="flex items-center gap-2">
-        <Button variant="outline" size="icon" className="rounded-full">
-          <ChevronLeft size={18} />
-        </Button>
-        <Button variant="outline" size="icon" className="rounded-full">
-          <ChevronRight size={18} />
-        </Button>
-      </div>
-    </div>
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-      {courses
-        .filter(c => c.id !== current.id && c.categories.some(cat => current.categories.includes(cat)))
-        .slice(0, 3)
-        .map(c => (
-          <CourseCard key={c.id} course={c} onClick={() => router.push(`/explore/${c.id}`)} />
-        ))}
-    </div>
-  </div>
-)
-};
 
 export default CourseDetail;
