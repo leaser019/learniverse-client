@@ -120,16 +120,7 @@ const aiTools = [
     status: 'New',
     tags: ['CV', 'ATS', 'Optimization'],
   },
-  // {
-  //   id: 3,
-  //   title: 'Text Summarizer',
-  //   description: 'Summarize long texts into key points intelligently',
-  //   icon: <IconPencil size={24} />,
-  //   path: '/lab/text-summarizer',
-  //   category: 'language',
-  //   status: 'Popular',
-  //   tags: ['NLP', 'Summarization', 'Text'],
-  // },
+
   {
     id: 4,
     title: 'Code Explainer',
@@ -140,16 +131,7 @@ const aiTools = [
     status: 'Useful',
     tags: ['Code', 'Explanation', 'Learning'],
   },
-  // {
-  //   id: 5,
-  //   title: 'Language Translator',
-  //   description: 'Translate text between multiple languages with high accuracy',
-  //   icon: <IconLanguage size={24} />,
-  //   path: '/lab/translator',
-  //   category: 'language',
-  //   status: 'Basic',
-  //   tags: ['Translation', 'Multilingual'],
-  // },
+
   {
     id: 6,
     title: 'Interview Practice AI',
@@ -160,16 +142,7 @@ const aiTools = [
     status: 'Premium',
     tags: ['Interview', 'Practice', 'Feedback'],
   },
-  // {
-  //   id: 7,
-  //   title: 'Smart Study Assistant',
-  //   description: 'AI study assistant creates quizzes, flashcards, and lesson summaries',
-  //   icon: <IconBrain size={24} />,
-  //   path: '/lab/study-assistant',
-  //   category: 'language',
-  //   status: 'Beta',
-  //   tags: ['Learning', 'Quiz', 'Memory'],
-  // },
+
   {
     id: 8,
     title: 'Code Generator',

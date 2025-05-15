@@ -24,7 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { courses } from '@/data/course';
 import { Course } from '@/types/course';
 import { motion } from 'framer-motion';
-import { BarChart3, Clock, Filter, Search, Star, Users } from 'lucide-react';
+import { BarChart3, Clock, Filter, Plus, Search, Star, Users } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -114,13 +114,23 @@ const ExplorePage = () => {
               className="py-6 pl-10"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            />{' '}
           </div>
         </div>
-        <Button variant="outline" className="gap-2 py-6">
-          <Filter size={16} />
-          Filters
-        </Button>
+        <div className="flex space-x-2">
+          <Button variant="outline" className="gap-2 py-6">
+            <Filter size={16} />
+            Filters
+          </Button>
+          <Button
+            variant="default"
+            className="gap-2 py-6 bg-pink-600 hover:bg-pink-700"
+            onClick={() => router.push('/explore/create')}
+          >
+            <Plus size={16} />
+            Create Course
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
