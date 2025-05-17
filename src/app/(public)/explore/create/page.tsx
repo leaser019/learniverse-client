@@ -215,27 +215,21 @@ export default function CreateCoursePage() {
   return (
     <div className="container mx-auto max-w-5xl px-4 py-2">
       <Title
-        title="Tạo Khóa Học Mới"
-        description="Chia sẻ kiến thức của bạn với cộng đồng học viên đang chờ đợi."
+        title="Create New Course"
+        description="Share your knowledge with eager learners."
         accentColor="pink"
       />
 
-      <Button
-        variant="outline"
-        onClick={() => router.push("/explore")}
-        className="mb-6"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" /> Quay lại
+      <Button variant="outline" onClick={() => router.push('/explore')} className="mb-6">
+        <ArrowLeft className="mr-2 h-4 w-4" /> Back
       </Button>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <Card>
             <CardHeader>
-              <CardTitle>Thông tin cơ bản</CardTitle>
-              <CardDescription>
-                Nhập thông tin chính về khóa học của bạn
-              </CardDescription>
+              <CardTitle>Basic Information</CardTitle>
+              <CardDescription>Enter the basic information about your course</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <FormField
@@ -243,7 +237,7 @@ export default function CreateCoursePage() {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tiêu đề khóa học</FormLabel>
+                    <FormLabel>Course Title</FormLabel>
                     <FormControl>
                       <Input placeholder="React: The Complete Guide" {...field} />
                     </FormControl>
@@ -257,10 +251,10 @@ export default function CreateCoursePage() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Mô tả khóa học</FormLabel>
+                    <FormLabel>Course Description</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Mô tả chi tiết về khóa học của bạn..."
+                        placeholder="Enter a detailed description of your course..."
                         className="min-h-[100px]"
                         {...field}
                       />
@@ -276,7 +270,7 @@ export default function CreateCoursePage() {
                   name="thumbnailUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>URL ảnh thumbnail</FormLabel>
+                      <FormLabel>Thumbnail URL</FormLabel>
                       <FormControl>
                         <Input placeholder="https://example.com/image.jpg" {...field} />
                       </FormControl>
@@ -290,7 +284,7 @@ export default function CreateCoursePage() {
                   name="videoUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>URL video giới thiệu</FormLabel>
+                      <FormLabel>Video URL</FormLabel>
                       <FormControl>
                         <Input placeholder="https://youtube.com/embed/xyz" {...field} />
                       </FormControl>
@@ -304,10 +298,8 @@ export default function CreateCoursePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Thông tin giảng viên</CardTitle>
-              <CardDescription>
-                Thông tin về người sẽ giảng dạy khóa học này
-              </CardDescription>
+              <CardTitle>Instructor Information</CardTitle>
+              <CardDescription>Information about the person teaching this course</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -316,7 +308,7 @@ export default function CreateCoursePage() {
                   name="instructor"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tên giảng viên</FormLabel>
+                      <FormLabel>Instructor Name</FormLabel>
                       <FormControl>
                         <Input placeholder="Nguyễn Văn A" {...field} />
                       </FormControl>
@@ -330,7 +322,7 @@ export default function CreateCoursePage() {
                   name="instructorRole"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Chức danh</FormLabel>
+                      <FormLabel>Instructor Role</FormLabel>
                       <FormControl>
                         <Input placeholder="Senior Developer" {...field} />
                       </FormControl>
@@ -345,10 +337,10 @@ export default function CreateCoursePage() {
                 name="bio"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tiểu sử</FormLabel>
+                    <FormLabel>Bio</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Thông tin về kinh nghiệm của giảng viên..."
+                        placeholder="Enter information about the instructor's experience..."
                         className="min-h-[100px]"
                         {...field}
                       />
@@ -362,9 +354,9 @@ export default function CreateCoursePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Chi tiết khóa học</CardTitle>
+              <CardTitle>Course Details</CardTitle>
               <CardDescription>
-                Thông tin về mức độ, giá cả và các chi tiết khác
+                Information about the level, pricing, and other details
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -374,13 +366,11 @@ export default function CreateCoursePage() {
                   name="duration"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Thời lượng</FormLabel>
+                      <FormLabel>Duration</FormLabel>
                       <FormControl>
                         <Input placeholder="12h 30m" {...field} />
                       </FormControl>
-                      <FormDescription>
-                        Ví dụ: "5h 30m", "12h 45m"
-                      </FormDescription>
+                      <FormDescription>Ví dụ: "5h 30m", "12h 45m"</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -391,14 +381,11 @@ export default function CreateCoursePage() {
                   name="level"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Cấp độ</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+                      <FormLabel>Level</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Chọn cấp độ" />
+                            <SelectValue placeholder="Select level" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -419,7 +406,7 @@ export default function CreateCoursePage() {
                   name="language"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Ngôn ngữ</FormLabel>
+                      <FormLabel>Language</FormLabel>
                       <FormControl>
                         <Input placeholder="Tiếng Việt" {...field} />
                       </FormControl>
@@ -435,14 +422,9 @@ export default function CreateCoursePage() {
                   name="price"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Giá (VND)</FormLabel>
+                      <FormLabel>Price (VND)</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="0"
-                          min="0"
-                          {...field}
-                        />
+                        <Input type="number" placeholder="0" min="0" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -454,7 +436,7 @@ export default function CreateCoursePage() {
                   name="discount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Giảm giá (0-1)</FormLabel>
+                      <FormLabel>Discount (0-1)</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -465,9 +447,7 @@ export default function CreateCoursePage() {
                           {...field}
                         />
                       </FormControl>
-                      <FormDescription>
-                        Ví dụ: 0.2 = giảm 20%, 0.5 = giảm 50%
-                      </FormDescription>
+                      <FormDescription>Example: 0.2 = 20% off, 0.5 = 50% off</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -478,20 +458,15 @@ export default function CreateCoursePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Danh mục & Từ khóa</CardTitle>
-              <CardDescription>
-                Phân loại và tìm kiếm khóa học của bạn
-              </CardDescription>
+              <CardTitle>Categories & Tags</CardTitle>
+              <CardDescription>Classify and search for your course</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <FormLabel>Danh mục</FormLabel>
+                <FormLabel>Categories</FormLabel>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {categories.map((cat) => (
-                    <div
-                      key={cat}
-                      className="flex items-center bg-slate-100 rounded-md px-2 py-1"
-                    >
+                    <div key={cat} className="flex items-center bg-slate-100 rounded-md px-2 py-1">
                       <span>{cat}</span>
                       <Button
                         variant="ghost"
@@ -505,11 +480,13 @@ export default function CreateCoursePage() {
                   ))}
                 </div>
                 <div className="flex mt-2">
-                  <Select onValueChange={(value) => {
-                    if (value && !categories.includes(value)) {
-                      setCategories([...categories, value]);
-                    }
-                  }}>
+                  <Select
+                    onValueChange={(value) => {
+                      if (value && !categories.includes(value)) {
+                        setCategories([...categories, value]);
+                      }
+                    }}
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Chọn danh mục" />
                     </SelectTrigger>
@@ -532,26 +509,23 @@ export default function CreateCoursePage() {
                     type="button"
                     variant="outline"
                     className="ml-2"
-                    onClick={() => addToArray(categoryInput, categories, setCategories, setCategoryInput)}
+                    onClick={() =>
+                      addToArray(categoryInput, categories, setCategories, setCategoryInput)
+                    }
                   >
-                    Thêm
+                    Add
                   </Button>
                 </div>
                 {categories.length === 0 && (
-                  <p className="text-sm text-red-500 mt-2">
-                    Vui lòng thêm ít nhất một danh mục
-                  </p>
+                  <p className="text-sm text-red-500 mt-2">Please add at least one category</p>
                 )}
               </div>
 
               <div>
-                <FormLabel>Từ khóa</FormLabel>
+                <FormLabel>Tags</FormLabel>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {tags.map((tag) => (
-                    <div
-                      key={tag}
-                      className="flex items-center bg-slate-100 rounded-md px-2 py-1"
-                    >
+                    <div key={tag} className="flex items-center bg-slate-100 rounded-md px-2 py-1">
                       <span>{tag}</span>
                       <Button
                         variant="ghost"
@@ -576,7 +550,7 @@ export default function CreateCoursePage() {
                     className="ml-2"
                     onClick={() => addToArray(tagInput, tags, setTags, setTagInput)}
                   >
-                    Thêm
+                    Add
                   </Button>
                 </div>
               </div>
@@ -585,14 +559,12 @@ export default function CreateCoursePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Kỹ năng & Yêu cầu</CardTitle>
-              <CardDescription>
-                Kỹ năng học viên sẽ đạt được và yêu cầu đầu vào
-              </CardDescription>
+              <CardTitle>Skills & Requirements</CardTitle>
+              <CardDescription>Skills learners will acquire and prerequisites</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <FormLabel>Kỹ năng sẽ đạt được</FormLabel>
+                <FormLabel>Skills to be Acquired</FormLabel>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {skills.map((skill) => (
                     <div
@@ -623,24 +595,19 @@ export default function CreateCoursePage() {
                     className="ml-2"
                     onClick={() => addToArray(skillInput, skills, setSkills, setSkillInput)}
                   >
-                    Thêm
+                    Add
                   </Button>
                 </div>
                 {skills.length === 0 && (
-                  <p className="text-sm text-red-500 mt-2">
-                    Vui lòng thêm ít nhất một kỹ năng
-                  </p>
+                  <p className="text-sm text-red-500 mt-2">Please add at least one skill</p>
                 )}
               </div>
 
               <div>
-                <FormLabel>Yêu cầu đầu vào</FormLabel>
+                <FormLabel>Prerequisites</FormLabel>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {requirements.map((req) => (
-                    <div
-                      key={req}
-                      className="flex items-center bg-slate-100 rounded-md px-2 py-1"
-                    >
+                    <div key={req} className="flex items-center bg-slate-100 rounded-md px-2 py-1">
                       <span>{req}</span>
                       <Button
                         variant="ghost"
@@ -663,15 +630,20 @@ export default function CreateCoursePage() {
                     type="button"
                     variant="outline"
                     className="ml-2"
-                    onClick={() => addToArray(requirementInput, requirements, setRequirements, setRequirementInput)}
+                    onClick={() =>
+                      addToArray(
+                        requirementInput,
+                        requirements,
+                        setRequirements,
+                        setRequirementInput
+                      )
+                    }
                   >
-                    Thêm
+                    Add
                   </Button>
                 </div>
                 {requirements.length === 0 && (
-                  <p className="text-sm text-red-500 mt-2">
-                    Vui lòng thêm ít nhất một yêu cầu
-                  </p>
+                  <p className="text-sm text-red-500 mt-2">Please add at least one prerequisite</p>
                 )}
               </div>
             </CardContent>
@@ -679,19 +651,14 @@ export default function CreateCoursePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Điều học viên sẽ học được</CardTitle>
-              <CardDescription>
-                Liệt kê những gì học viên sẽ học được sau khóa học
-              </CardDescription>
+              <CardTitle>What Learners Will Gain</CardTitle>
+              <CardDescription>List what learners will gain from the course</CardDescription>
             </CardHeader>
             <CardContent>
               <div>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {whatYouWillLearn.map((item) => (
-                    <div
-                      key={item}
-                      className="flex items-center bg-slate-100 rounded-md px-2 py-1"
-                    >
+                    <div key={item} className="flex items-center bg-slate-100 rounded-md px-2 py-1">
                       <span>{item}</span>
                       <Button
                         variant="ghost"
@@ -714,14 +681,16 @@ export default function CreateCoursePage() {
                     type="button"
                     variant="outline"
                     className="ml-2"
-                    onClick={() => addToArray(learnInput, whatYouWillLearn, setWhatYouWillLearn, setLearnInput)}
+                    onClick={() =>
+                      addToArray(learnInput, whatYouWillLearn, setWhatYouWillLearn, setLearnInput)
+                    }
                   >
                     Thêm
                   </Button>
                 </div>
                 {whatYouWillLearn.length === 0 && (
                   <p className="text-sm text-red-500 mt-2">
-                    Vui lòng thêm ít nhất một điều học viên sẽ học được
+                    Please add at least one thing learners will gain
                   </p>
                 )}
               </div>
@@ -731,36 +700,24 @@ export default function CreateCoursePage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Nội dung khóa học</CardTitle>
-                <CardDescription>
-                  Thêm các module và bài học cho khóa học
-                </CardDescription>
+                <CardTitle>Course Content</CardTitle>
+                <CardDescription>Add modules and lessons to the course</CardDescription>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={addModule}
-                className="gap-1"
-              >
-                <Plus className="h-4 w-4" /> Thêm Module
+              <Button type="button" variant="outline" onClick={addModule} className="gap-1">
+                <Plus className="h-4 w-4" /> Add Module
               </Button>
             </CardHeader>
             <CardContent>
               {modules.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  <p>Chưa có module nào. Hãy thêm module đầu tiên!</p>
+                  <p>No modules added yet. Please add your first module!</p>
                 </div>
               ) : (
                 <div className="space-y-8">
                   {modules.map((module, moduleIndex) => (
-                    <div
-                      key={module.id}
-                      className="border rounded-lg p-4 space-y-4"
-                    >
+                    <div key={module.id} className="border rounded-lg p-4 space-y-4">
                       <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-medium">
-                          Module {moduleIndex + 1}
-                        </h3>
+                        <h3 className="text-lg font-medium">Module {moduleIndex + 1}</h3>
                         <Button
                           type="button"
                           variant="ghost"
@@ -773,21 +730,17 @@ export default function CreateCoursePage() {
 
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div>
-                          <FormLabel>Tiêu đề</FormLabel>
+                          <FormLabel>Title</FormLabel>
                           <Input
                             value={module.title}
-                            onChange={(e) =>
-                              updateModule(moduleIndex, "title", e.target.value)
-                            }
+                            onChange={(e) => updateModule(moduleIndex, 'title', e.target.value)}
                           />
                         </div>
                         <div>
-                          <FormLabel>Thời lượng</FormLabel>
+                          <FormLabel>Duration</FormLabel>
                           <Input
                             value={module.duration}
-                            onChange={(e) =>
-                              updateModule(moduleIndex, "duration", e.target.value)
-                            }
+                            onChange={(e) => updateModule(moduleIndex, 'duration', e.target.value)}
                             placeholder="vd: 2h 30m"
                           />
                         </div>
@@ -805,31 +758,22 @@ export default function CreateCoursePage() {
                             size="sm"
                             className="gap-1"
                           >
-                            <Plus className="h-3 w-3" /> Thêm bài học
+                            <Plus className="h-3 w-3" /> Add Lesson
                           </Button>
                         </div>
 
                         {module.lessons.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">
-                            Module này chưa có bài học nào
-                          </p>
+                          <p className="text-sm text-muted-foreground">No lessons added yet.</p>
                         ) : (
                           <div className="space-y-3">
                             {module.lessons.map((lesson, lessonIndex) => (
-                              <div
-                                key={lesson.id}
-                                className="border rounded-md p-3 space-y-3"
-                              >
+                              <div key={lesson.id} className="border rounded-md p-3 space-y-3">
                                 <div className="flex justify-between items-center">
-                                  <h5 className="text-sm font-medium">
-                                    Bài {lessonIndex + 1}
-                                  </h5>
+                                  <h5 className="text-sm font-medium">Lesson {lessonIndex + 1}</h5>
                                   <Button
                                     type="button"
                                     variant="ghost"
-                                    onClick={() =>
-                                      removeLesson(moduleIndex, lessonIndex)
-                                    }
+                                    onClick={() => removeLesson(moduleIndex, lessonIndex)}
                                     size="sm"
                                     className="h-6 w-6 p-0"
                                   >
@@ -839,7 +783,7 @@ export default function CreateCoursePage() {
 
                                 <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                                   <div>
-                                    <FormLabel className="text-xs">Tiêu đề</FormLabel>
+                                    <FormLabel className="text-xs">Title</FormLabel>
                                     <Input
                                       className="h-8 text-sm"
                                       value={lesson.title}
@@ -847,14 +791,14 @@ export default function CreateCoursePage() {
                                         updateLesson(
                                           moduleIndex,
                                           lessonIndex,
-                                          "title",
+                                          'title',
                                           e.target.value
                                         )
                                       }
                                     />
                                   </div>
                                   <div>
-                                    <FormLabel className="text-xs">Thời lượng</FormLabel>
+                                    <FormLabel className="text-xs">Duration</FormLabel>
                                     <Input
                                       className="h-8 text-sm"
                                       value={lesson.duration}
@@ -862,7 +806,7 @@ export default function CreateCoursePage() {
                                         updateLesson(
                                           moduleIndex,
                                           lessonIndex,
-                                          "duration",
+                                          'duration',
                                           e.target.value
                                         )
                                       }
@@ -873,14 +817,14 @@ export default function CreateCoursePage() {
 
                                 <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                                   <div>
-                                    <FormLabel className="text-xs">Loại</FormLabel>
+                                    <FormLabel className="text-xs">Type</FormLabel>
                                     <Select
                                       value={lesson.type}
                                       onValueChange={(value) =>
                                         updateLesson(
                                           moduleIndex,
                                           lessonIndex,
-                                          "type",
+                                          'type',
                                           value as LessonType
                                         )
                                       }
@@ -890,10 +834,10 @@ export default function CreateCoursePage() {
                                       </SelectTrigger>
                                       <SelectContent>
                                         <SelectItem value="video">Video</SelectItem>
-                                        <SelectItem value="exercise">Bài tập</SelectItem>
+                                        <SelectItem value="exercise">Exercise</SelectItem>
                                         <SelectItem value="quiz">Quiz</SelectItem>
-                                        <SelectItem value="project">Dự án</SelectItem>
-                                        <SelectItem value="challenge">Thử thách</SelectItem>
+                                        <SelectItem value="project">Project</SelectItem>
+                                        <SelectItem value="challenge">Challenge</SelectItem>
                                       </SelectContent>
                                     </Select>
                                   </div>
@@ -906,7 +850,7 @@ export default function CreateCoursePage() {
                                         updateLesson(
                                           moduleIndex,
                                           lessonIndex,
-                                          "isFree",
+                                          'isFree',
                                           e.target.checked
                                         )
                                       }
@@ -916,22 +860,22 @@ export default function CreateCoursePage() {
                                       htmlFor={`free-${module.id}-${lesson.id}`}
                                       className="text-xs"
                                     >
-                                      Bài học miễn phí
+                                      Free Lesson
                                     </label>
                                   </div>
                                 </div>
 
-                                {lesson.type === "video" && (
+                                {lesson.type === 'video' && (
                                   <div>
-                                    <FormLabel className="text-xs">URL Video</FormLabel>
+                                    <FormLabel className="text-xs">Video URL</FormLabel>
                                     <Input
                                       className="h-8 text-sm"
-                                      value={lesson.videoUrl || ""}
+                                      value={lesson.videoUrl || ''}
                                       onChange={(e) =>
                                         updateLesson(
                                           moduleIndex,
                                           lessonIndex,
-                                          "videoUrl",
+                                          'videoUrl',
                                           e.target.value
                                         )
                                       }
@@ -949,23 +893,17 @@ export default function CreateCoursePage() {
                 </div>
               )}
               {modules.length === 0 && (
-                <p className="text-sm text-red-500 mt-2">
-                  Vui lòng thêm ít nhất một module
-                </p>
+                <p className="text-sm text-red-500 mt-2">Please add at least one module</p>
               )}
             </CardContent>
           </Card>
 
           <CardFooter className="flex justify-end space-x-4 border rounded-lg py-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push("/explore")}
-            >
-              Hủy
+            <Button type="button" variant="outline" onClick={() => router.push('/explore')}>
+              Cancel
             </Button>
             <Button type="submit" className="gap-2">
-              <Save className="h-4 w-4" /> Tạo khóa học
+              <Save className="h-4 w-4" /> Create Course
             </Button>
           </CardFooter>
         </form>

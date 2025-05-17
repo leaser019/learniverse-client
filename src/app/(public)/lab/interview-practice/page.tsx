@@ -403,12 +403,10 @@ const InterviewPractice = () => {
 };
 
 const QuestionCard = ({ question, index, startQuestion, hasFeedback }) => {
+  console.log('question', question);
   return (
     <Card className="group border-0 shadow-md hover:shadow-lg transition-all duration-300">
-      <div className={cn(
-        "h-1.5 w-full", 
-        getDifficultyGradient(question.difficulty)
-      )} />
+      <div className={cn('h-1.5 w-full', getDifficultyGradient(question.difficulty))} />
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
           <div className="flex items-center">
@@ -419,34 +417,42 @@ const QuestionCard = ({ question, index, startQuestion, hasFeedback }) => {
               {question.category}
             </CardTitle>
           </div>
-          <Badge variant={getDifficultyVariant(question.difficulty)}>
-            {question.difficulty}
-          </Badge>
+          <Badge variant={getDifficultyVariant(question.difficulty)}>{question.difficulty}</Badge>
         </div>
       </CardHeader>
-      
+
       <CardContent className="pt-2">
         <p className="mb-4 text-base">{question.question}</p>
-        
+
         <div className="mb-4">
           <div className="flex items-center mb-2">
             <IconStar size={16} className="text-purple-600 mr-2" />
-            <h4 className="font-medium text-sm text-purple-700 dark:text-purple-300">Expected Topics</h4>
+            <h4 className="font-medium text-sm text-purple-700 dark:text-purple-300">
+              Expected Topics
+            </h4>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {question.expectedTopics.map((topic, i) => (
-              <Badge key={i} variant="outline" className="bg-purple-50/50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors text-xs font-normal">
+              <Badge
+                key={i}
+                variant="outline"
+                className="bg-purple-50/50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors text-xs font-normal"
+              >
                 {topic}
               </Badge>
             ))}
           </div>
         </div>
-        
+
         <div className="flex justify-end">
-          <Button 
+          <Button
             onClick={() => startQuestion(question.id)}
-            variant={hasFeedback ? "outline" : "default"}
-            className={!hasFeedback ? "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700" : ""}
+            variant={hasFeedback ? 'outline' : 'default'}
+            className={
+              !hasFeedback
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700'
+                : ''
+            }
           >
             {hasFeedback ? (
               <>
@@ -469,22 +475,22 @@ const QuestionCard = ({ question, index, startQuestion, hasFeedback }) => {
 const FeedbackCard = ({ question, answer, feedback, index }) => {
   return (
     <Card className="border-0 shadow-md hover:shadow-lg transition-all duration-300">
-      <div className={cn(
-        "h-1.5 w-full", 
-        getScoreGradient(feedback.score)
-      )} />
+      <div className={cn('h-1.5 w-full', getScoreGradient(feedback.score))} />
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg flex items-center">
-            <span>Question {index + 1}: {question?.category || "Unknown"}</span>
-            <div className="ml-3 size-8 rounded-full flex items-center justify-center text-white font-bold" style={{background: getScoreColor(feedback.score)}}>
+            <span>Question {index + 1}:</span>
+            <div
+              className="ml-3 size-8 rounded-full flex items-center justify-center text-white font-bold"
+              style={{ background: getScoreColor(feedback.score) }}
+            >
               {feedback.score}
             </div>
           </CardTitle>
         </div>
-        <p className="text-muted-foreground">{question?.question || "Unknown"}</p>
+        {/* <p className="text-muted-foreground">{question?.question}</p> */}
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         <div className="p-3 bg-secondary/30 rounded-md">
           <div className="flex items-center mb-2">
@@ -493,7 +499,7 @@ const FeedbackCard = ({ question, answer, feedback, index }) => {
           </div>
           <p className="text-sm">{answer}</p>
         </div>
-        
+
         <div>
           <h4 className="font-medium mb-2 flex items-center">
             <IconCheck size={16} className="text-green-600 mr-2" />
@@ -501,11 +507,13 @@ const FeedbackCard = ({ question, answer, feedback, index }) => {
           </h4>
           <ul className="list-disc pl-5 space-y-1">
             {feedback.strengths.map((strength, i) => (
-              <li key={i} className="text-sm">{strength}</li>
+              <li key={i} className="text-sm">
+                {strength}
+              </li>
             ))}
           </ul>
         </div>
-        
+
         <div>
           <h4 className="font-medium mb-2 flex items-center">
             <IconArrowRight size={16} className="text-amber-600 mr-2" />
@@ -513,11 +521,13 @@ const FeedbackCard = ({ question, answer, feedback, index }) => {
           </h4>
           <ul className="list-disc pl-5 space-y-1">
             {feedback.improvements.map((improvement, i) => (
-              <li key={i} className="text-sm">{improvement}</li>
+              <li key={i} className="text-sm">
+                {improvement}
+              </li>
             ))}
           </ul>
         </div>
-        
+
         {feedback.missingPoints && feedback.missingPoints.length > 0 && (
           <div>
             <h4 className="font-medium mb-2 flex items-center">
@@ -526,12 +536,14 @@ const FeedbackCard = ({ question, answer, feedback, index }) => {
             </h4>
             <ul className="list-disc pl-5 space-y-1">
               {feedback.missingPoints.map((point, i) => (
-                <li key={i} className="text-sm">{point}</li>
+                <li key={i} className="text-sm">
+                  {point}
+                </li>
               ))}
             </ul>
           </div>
         )}
-        
+
         <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-md">
           <h4 className="font-medium mb-1">Overall Feedback</h4>
           <p className="text-sm">{feedback.overallFeedback}</p>

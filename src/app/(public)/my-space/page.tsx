@@ -65,7 +65,7 @@ export default function MySpace() {
               </SelectTrigger>
               <SelectContent>
                 {' '}
-                <SelectItem value="all">Tất cả</SelectItem>
+                <SelectItem value="all">All</SelectItem>
                 {levels.map((l) => (
                   <SelectItem key={l} value={l}>
                     {l}
@@ -81,7 +81,7 @@ export default function MySpace() {
                 <SelectValue placeholder="Ngôn ngữ" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tất cả</SelectItem>
+                <SelectItem value="all">All</SelectItem>
                 {languages.map((l) => (
                   <SelectItem key={l} value={l}>
                     {l}
@@ -109,28 +109,38 @@ export default function MySpace() {
           </div>
           <div className="grid gap-4">
             {filtered.map((ch) => (
-              <Card key={ch.id}>
+              <Card
+                key={ch.id}
+                className="hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-purple-200"
+              >
                 <CardHeader
                   onClick={() => router.push(`my-space/challenge/${ch.id}`)}
-                  className="cursor-pointer flex flex-row items-center justify-between"
+                  className="cursor-pointer flex flex-row items-center justify-between "
                 >
-                  <CardTitle>{ch.title}</CardTitle>
-                  <Badge variant="outline" className="ml-2">
+                  <CardTitle className="text-purple-900">{ch.title}</CardTitle>
+                  <Badge
+                    variant="outline"
+                    className="ml-2 bg-white/70 text-purple-600 border-purple-300"
+                  >
                     {ch.difficulty}
                   </Badge>
                 </CardHeader>
-                <CardContent>
-                  <div className="line-clamp-2 text-gray-500">
+                <CardContent className="bg-white/80">
+                  <div className="line-clamp-2 text-gray-600">
                     {ch.description.slice(0, 120)}...
                   </div>
                   <div className="flex gap-2 mt-2 flex-wrap">
                     {ch.categories.map((cat) => (
-                      <Badge key={cat} variant="secondary">
+                      <Badge
+                        key={cat}
+                        variant="secondary"
+                        className="bg-purple-100 text-purple-700"
+                      >
                         {cat}
                       </Badge>
                     ))}
                     {ch.supportedLanguages.map((l) => (
-                      <Badge key={l} variant="default">
+                      <Badge key={l} variant="default" className="bg-pink-100 text-pink-700">
                         {l}
                       </Badge>
                     ))}
@@ -139,8 +149,8 @@ export default function MySpace() {
               </Card>
             ))}
             {filtered.length === 0 && (
-              <div className="text-center text-gray-400">
-                Không tìm thấy challenge nào, chắc do bạn quá đỉnh!
+              <div className="text-center p-8 bg-white/50 rounded-xl backdrop-blur-sm text-gray-500">
+                Hông có challenge nào phù hợp nè 😢 Thử tìm cái khác xem!
               </div>
             )}
           </div>
@@ -148,7 +158,7 @@ export default function MySpace() {
         <div className="w-full md:w-1/3">
           <Card>
             <CardHeader>
-              <CardTitle>Bảng Xếp Hạng – Ai cháy nhất?</CardTitle>
+              <CardTitle>Leaderboard – Who is on fire?</CardTitle>
             </CardHeader>
             <CardContent>
               <ol className="space-y-2">
