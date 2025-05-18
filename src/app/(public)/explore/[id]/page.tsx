@@ -25,6 +25,7 @@ import {
   Info,
   Languages,
   LayoutGrid,
+  Pencil,
   PlayCircle,
   Share2,
   ShieldCheck,
@@ -248,7 +249,15 @@ const CourseDetail = () => {
                     className="w-full"
                     onClick={() => selectedLesson && router.push(`/explore/${course.id}/learn`)}
                   >
+                    {' '}
                     View Free Lesson
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full mt-2"
+                    onClick={() => router.push(`/explore/${course.id}/update`)}
+                  >
+                    <Pencil className="mr-2 h-4 w-4" /> Edit Course
                   </Button>
                 </div>
                 {/* guarantees */}

@@ -1,9 +1,37 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Enable config img url
   images: {
-    domains: ['geraldkrug.mypressonline.com', 'cdn.learniverse.com', 'source.unsplash.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'geraldkrug.mypressonline.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.learniverse.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'source.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.pravatar.cc',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 's3-sgn09.fptcloud.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*',
+      },
+    ],
   },
 };
 
