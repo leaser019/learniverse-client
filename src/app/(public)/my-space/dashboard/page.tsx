@@ -12,7 +12,6 @@ import { useEffect, useState } from 'react';
 
 export default function Dashboard() {
   const [progress, setProgress] = useState(0);
-  const [activeTab, setActiveTab] = useState('statistics');
   const [isClient, setIsClient] = useState(false);
 
   // For client-side rendering

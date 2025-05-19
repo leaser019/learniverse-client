@@ -10,6 +10,7 @@ const challengeCache = new LRUCache({
 });
 
 export async function GET(req) {
+  console.log(req);
   try {
     // Get today's date in YYYY-MM-DD format for cache key
     const today = new Date().toISOString().split('T')[0];

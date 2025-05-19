@@ -28,7 +28,7 @@ const CodeGenerator = () => {
   const [language, setLanguage] = useState("javascript");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
+  const [, setError] = useState(null);
   const [copied, setCopied] = useState(false);
 
   const handleSubmit = async (e) => {

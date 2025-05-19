@@ -265,7 +265,7 @@ const Dashboard: FC = () => {
   const memoChartData = useMemo(() => chartData, []);
   const memoChartOptions = useMemo(() => chartOptions, []);
 
-  const [username, setUsername] = useState<string>('learner1');
+  const [username] = useState<string>('learner1');
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
   const [events, setEvents] = useState<StudyEvent[]>([]);
 
@@ -306,7 +306,7 @@ const Dashboard: FC = () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      let newDeadlines: Deadline[] = [];
+      // let newDeadlines: Deadline[] = [];
       let needsUpdate = false;
 
       formattedDeadlines.forEach((deadline: Deadline) => {
@@ -948,10 +948,7 @@ const Dashboard: FC = () => {
                   document.body.removeChild(a);
                   URL.revokeObjectURL(url);
 
-                  toast({
-                    title: 'Dữ liệu đã được xuất',
-                    description: 'Tất cả deadline và sự kiện đã được lưu vào file JSON',
-                  });
+                  toast.success('Dữ liệu đã được xuất');
                 }}
                 className="text-blue-600 border-blue-200"
               >
@@ -998,16 +995,9 @@ const Dashboard: FC = () => {
                             );
                           }
 
-                          toast({
-                            title: 'Dữ liệu đã được nhập',
-                            description: 'Tất cả deadline và sự kiện đã được khôi phục',
-                          });
+                          toast.success('Dữ liệu đã được nhập');
                         } catch (error) {
-                          toast({
-                            title: 'Lỗi khi nhập dữ liệu',
-                            description: 'File không hợp lệ hoặc bị hỏng',
-                            variant: 'destructive',
-                          });
+                          toast.error('Lỗi khi nhập dữ liệu');
                         }
                       };
                       reader.readAsText(file);

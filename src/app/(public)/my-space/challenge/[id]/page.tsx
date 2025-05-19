@@ -53,7 +53,7 @@ export default function ChallengePage() {
   >([]);
   const [isRunning, setIsRunning] = useState(false);
   const [submissionHistory, setSubmissionHistory] = useState<ChallengeSubmission[]>([]);
-  const [currentTab, setCurrentTab] = useState('code');
+  const [, setCurrentTab] = useState('code');
   const [customTestInput, setCustomTestInput] = useState('');
   const [customTestOutput, setCustomTestOutput] = useState('');
   const [showVisualization, setShowVisualization] = useState(false);

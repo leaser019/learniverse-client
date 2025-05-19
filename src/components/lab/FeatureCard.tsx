@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function FeatureCard({ feature, index }) {
   return (
-    <div className="">
+    <div className="" key={index}>
       <Card className="group h-full overflow-hidden border-0 bg-background/40 backdrop-blur-sm hover:bg-background/60 transition-all duration-300 shadow-lg shadow-teal-500/5 hover:shadow-teal-500/10 relative">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">

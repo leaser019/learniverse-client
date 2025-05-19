@@ -1,6 +1,5 @@
 "use client"
 
-import { useTheme } from 'next-themes';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -12,7 +11,6 @@ export default function AuthLayout({
   children: React.ReactNode;
 }>) {
   const [mounted, setMounted] = useState(false);
-  const { theme, setTheme } = useTheme();
   useEffect(() => {
     setMounted(true);
   }, []);
