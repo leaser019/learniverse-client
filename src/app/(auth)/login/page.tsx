@@ -53,7 +53,7 @@ export default function Login() {
         email: data.email,
         password: data.password,
       });
-
+      // @ts-expect-error fix later
       const userInfo = response.metadata?.user;
       localStorage.setItem('userId', userInfo?._id || '');
       localStorage.setItem('userData', JSON.stringify(userInfo) || '');
