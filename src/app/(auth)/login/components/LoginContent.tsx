@@ -1,25 +1,25 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import Link from 'next/link';
 
 export default function LoginContent() {
-  const [isLoaded, setIsLoaded] = useState(false);
-  
-  useEffect(() => {
-    setIsLoaded(true);
-  }, []);
-
   return (
     <section className="container w-full overflow-hidden relative">
-    
       <style jsx global>{`
         @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
+          0% {
+            transform: translate(0px, 0px) scale(1);
+          }
+          33% {
+            transform: translate(30px, -50px) scale(1.1);
+          }
+          66% {
+            transform: translate(-20px, 20px) scale(0.9);
+          }
+          100% {
+            transform: translate(0px, 0px) scale(1);
+          }
         }
         .animate-blob {
           animation: blob 7s infinite;
@@ -33,9 +33,9 @@ export default function LoginContent() {
       `}</style>
 
       <div className="grid place-items-center gap-8 mx-auto pb-10 md:pb-16">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}  
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="text-center space-y-8"
         >
@@ -49,15 +49,13 @@ export default function LoginContent() {
               </Badge>
               <span className="flex items-center gap-1.5">
                 <span className="text-blue-500">✨</span>
-                <span className="font-medium tracking-wide">
-                  LIMITLESS LEARNING JUST LAUNCHED!
-                </span>
+                <span className="font-medium tracking-wide">LIMITLESS LEARNING JUST LAUNCHED!</span>
                 <span className="text-blue-500">✨</span>
               </span>
             </Badge>
           </div>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -65,10 +63,10 @@ export default function LoginContent() {
           >
             <h1>
               Explore
-              <motion.span 
+              <motion.span
                 className="text-transparent px-2 bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text inline-block"
                 animate={{ rotate: [0, 1, -1, 0] }}
-                transition={{ repeat: Infinity, duration: 2, repeatType: "mirror" }}
+                transition={{ repeat: Infinity, duration: 2, repeatType: 'mirror' }}
               >
                 Learniverse
               </motion.span>
@@ -76,27 +74,26 @@ export default function LoginContent() {
             </h1>
           </motion.div>
 
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.4 }}
             className="max-w-screen-sm mx-auto text-lg text-gray-600"
           >
-            We&apos;re not just a learning tool – we&apos;re a vibrant community
-            of passionate learners. Join us today to access exclusive resources
-            and dedicated support.
+            We&apos;re not just a learning tool – we&apos;re a vibrant community of passionate
+            learners. Join us today to access exclusive resources and dedicated support.
           </motion.p>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.6 }}
             className="space-y-4 md:space-y-0 md:space-x-4"
           >
-            <Button 
+            <Button
               className="w-5/6 md:w-1/3 font-bold group relative overflow-hidden bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-700 hover:to-blue-500"
               onClick={() => {
-                window.location.href = "https://learniversal.vercel.app/"
+                window.location.href = 'https://learniversal.vercel.app/';
               }}
             >
               <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-400 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform scale-x-0 group-hover:scale-x-100 origin-left"></span>

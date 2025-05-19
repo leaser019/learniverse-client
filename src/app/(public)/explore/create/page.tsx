@@ -370,7 +370,9 @@ export default function CreateCoursePage() {
                       <FormControl>
                         <Input placeholder="12h 30m" {...field} />
                       </FormControl>
-                      <FormDescription>Ví dụ: "5h 30m", "12h 45m"</FormDescription>
+                      <FormDescription>
+                        Ví dụ: &apos;5h 30m&apos;, &apos;12h 45m&apos;
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

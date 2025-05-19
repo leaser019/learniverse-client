@@ -8,26 +8,28 @@ import { useEffect, useState } from "react";
 
 export default function NotFound() {
   const router = useRouter();
-  const [floatAnim, setFloatAnim] = useState(0);
-  const [stars, setStars] = useState<{x: number, y: number, size: number, opacity: number}[]>([]);
+  const [, setFloatAnim] = useState(0);
+  const [stars, setStars] = useState<{ x: number; y: number; size: number; opacity: number }[]>([]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setFloatAnim(prev => prev + 1);
+      setFloatAnim((prev) => prev + 1);
     }, 50);
 
     const generateStars = () => {
-      const newStars = Array(50).fill(0).map(() => ({
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        size: Math.random() * 3 + 1,
-        opacity: Math.random() * 0.8 + 0.2
-      }));
+      const newStars = Array(50)
+        .fill(0)
+        .map(() => ({
+          x: Math.random() * 100,
+          y: Math.random() * 100,
+          size: Math.random() * 3 + 1,
+          opacity: Math.random() * 0.8 + 0.2,
+        }));
       setStars(newStars);
     };
 
     generateStars();
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -77,9 +79,9 @@ export default function NotFound() {
           <div className="mt-6 relative">
             <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg blur opacity-25 animate-pulse"></div>
             <p className="relative mt-2 text-blue-100 bg-slate-900/60 backdrop-blur-sm p-4 rounded-lg border border-blue-800/50">
-              It seems like you've ventured too far into our universe.
+              It seems like you&apos;ve ventured too far into our universe.
               <br />
-              The page looking for doesn't exist or has been moved.
+              The page looking for doesn&apos;t exist or has been moved.
             </p>
           </div>
         </div>

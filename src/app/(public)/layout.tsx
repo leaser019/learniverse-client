@@ -22,6 +22,7 @@ export default function PublicLayout({
         }
         setIsLoading(false);
       } catch (error) {
+        console.log('Error checking authentication:', error);
         router.replace('/login');
       }
     };

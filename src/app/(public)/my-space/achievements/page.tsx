@@ -119,6 +119,7 @@ export default function Achievements() {
   const [filter, setFilter] = useState<'all' | 'achieved' | 'in-progress'>('all');
 
   const handleClaimReward = (id: string) => {
+    console.log(id);
     // Simulate claiming reward
     confetti({
       particleCount: 150,

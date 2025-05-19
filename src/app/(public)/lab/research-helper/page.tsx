@@ -23,7 +23,7 @@ const ResearchHelper = () => {
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
+  const [, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -42,8 +42,8 @@ export default function ResumeEnhancerComingSoon() {
             Resume Enhancer Coming Soon
           </h1>
           <p className="text-lg text-muted-foreground mb-8">
-            We're building an AI-powered tool to help you create standout resumes
-            that will impress recruiters and match job descriptions perfectly.
+            We&apos;re building an AI-powered tool to help you create standout resumes that will
+            impress recruiters and match job descriptions perfectly.
           </p>
         </motion.div>
 
@@ -87,7 +87,7 @@ export default function ResumeEnhancerComingSoon() {
                   onClick={() => setNotifyRequested(true)}
                 >
                   <Bell size={16} />
-                  {notifyRequested ? "We'll notify you!" : "Notify me when available"}
+                  {notifyRequested ? "We'll notify you!" : 'Notify me when available'}
                 </Button>
               </div>
             </CardContent>

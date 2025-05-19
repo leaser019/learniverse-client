@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 export default function ChatWindow({ messages, onSend, selected, users }: any) {
+  console.log(users);
   const [input, setInput] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
   useEffect(() => {

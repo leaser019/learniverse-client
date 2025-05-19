@@ -29,7 +29,7 @@ const InterviewPractice = () => {
   const [answers, setAnswers] = useState({});
   const [feedback, setFeedback] = useState({});
   const [currentQuestion, setCurrentQuestion] = useState(null);
-  const [error, setError] = useState(null);
+  const [, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
