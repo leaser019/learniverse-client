@@ -21,18 +21,21 @@ import {
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { courses } from '@/data/course';
+import { fetchAllCourses } from '@/redux/slices/courseSlice';
 import { Course } from '@/types/course';
 import { motion } from 'framer-motion';
 import { BarChart3, Clock, Filter, Plus, Search, Star, Users } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 /* ────────────────────────────────────────────────────────────────────────── */
 
 const ExplorePage = () => {
   const router = useRouter();
+  const dispatch = useDispatch();
+  const courses = useSelector((state) => state.courses.courses);
 
   /* UI state -------------------------------------------------------------- */
   const [activeTab, setActiveTab] = useState<'all' | 'popular' | 'new' | 'free'>('all');
@@ -41,7 +44,7 @@ const ExplorePage = () => {
   const [selectedLevel, setSelectedLevel] = useState<'all' | string>('all');
   const [selectedCat, setSelectedCat] = useState<'all' | string>('all');
 
-  const [filtered, setFiltered] = useState<Course[]>(courses);
+  const [filtered, setFiltered] = useState<Course[]>([]);
 
   /* Derived data ---------------------------------------------------------- */
   const allCategories = Array.from(new Set(courses.flatMap((c) => c.categories)));
@@ -90,10 +93,15 @@ const ExplorePage = () => {
     if (selectedCat !== 'all') res = res.filter((c) => c.categories.includes(selectedCat));
 
     setFiltered(res);
-  }, [activeTab, searchQuery, priceRange, selectedLevel, selectedCat]);
+  }, [activeTab, searchQuery, priceRange, selectedLevel, selectedCat, courses]);
 
   /* Helpers --------------------------------------------------------------- */
   const goToCourse = (id: string) => router.push(`/explore/${id}`);
+
+  useEffect(() => {
+    dispatch(fetchAllCourses());
+    setFiltered(courses);
+  }, [dispatch]);
 
   /* Render ---------------------------------------------------------------- */
   return (

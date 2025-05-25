@@ -8,69 +8,74 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { courses } from "@/data/course";
-import { Course, Lesson, Module } from "@/types/course";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Plus, Save, X } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { createCourse } from '@/redux/slices/courseSlice';
+import { Course, Lesson, Module } from '@/types/course';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { ArrowLeft, Plus, Save, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useDispatch, useSelector } from 'react-redux';
+import * as z from 'zod';
 
 const formSchema = z.object({
-  title: z.string().min(5, "Tiêu đề khóa học phải có ít nhất 5 ký tự"),
-  description: z.string().min(20, "Mô tả khóa học phải có ít nhất 20 ký tự"),
-  instructor: z.string().min(2, "Tên giảng viên phải có ít nhất 2 ký tự"),
-  instructorRole: z.string().min(2, "Vai trò giảng viên phải có ít nhất 2 ký tự"),
-  bio: z.string().min(20, "Tiểu sử giảng viên phải có ít nhất 20 ký tự"),
-  thumbnailUrl: z.string().url("URL hình ảnh không hợp lệ"),
-  videoUrl: z.string().url("URL video không hợp lệ"),
-  duration: z.string().min(2, "Thời lượng khóa học không hợp lệ"),
+  title: z.string().min(5, 'Course title must be at least 5 characters'),
+  description: z.string().min(20, 'Course description must be at least 20 characters'),
+  instructor: z.string().min(2, 'Instructor name must be at least 2 characters'),
+  instructorRole: z.string().min(2, 'Instructor role must be at least 2 characters'),
+  bio: z.string().min(20, 'Instructor bio must be at least 20 characters'),
+  thumbnailUrl: z.string().url('Invalid image URL'),
+  videoUrl: z.string().url('Invalid video URL'),
+  duration: z.string().min(2, 'Invalid course duration'),
   level: z.string(),
-  language: z.string().min(2, "Ngôn ngữ không hợp lệ"),
-  price: z.coerce.number().min(0, "Giá không thể âm"),
-  discount: z.coerce.number().min(0).max(1, "Giảm giá phải từ 0 đến 1"),
+  language: z.string().min(2, 'Invalid language'),
+  price: z.coerce.number().min(0, 'Invalid price'),
+  discount: z.coerce.number().min(0).max(1, 'Invalid discount'),
+  isPopular: z.boolean().optional().default(false),
 });
-
-// Các cấp độ khóa học
-const courseLevels = ["Beginner", "Intermediate", "Advanced", "All Levels"];
-// Tất cả các danh mục
-const allCategories = Array.from(
-  new Set(courses.flatMap((c) => c.categories))
-);
 
 export default function CreateCoursePage() {
   const router = useRouter();
+  const dispatch = useDispatch();
+  const courses = useSelector((state: any) => state.courses.courses);
+
+  const courseLevels = ['Beginner', 'Intermediate', 'Advanced', 'All Levels'];
+  const allCategories = Array.from(new Set(courses.flatMap((c) => c.categories)));
+
   const [categories, setCategories] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
   const [requirements, setRequirements] = useState<string[]>([]);
   const [whatYouWillLearn, setWhatYouWillLearn] = useState<string[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
-  
+  const [faqs, setFaqs] = useState<{ question: string; answer: string }[]>([]);
+  const [faqQuestion, setFaqQuestion] = useState('');
+  const [faqAnswer, setFaqAnswer] = useState('');
+
   // Input states for dynamic arrays
-  const [categoryInput, setCategoryInput] = useState("");
-  const [tagInput, setTagInput] = useState("");
-  const [skillInput, setSkillInput] = useState("");
-  const [requirementInput, setRequirementInput] = useState("");
-  const [learnInput, setLearnInput] = useState("");
-  
+  const [categoryInput, setCategoryInput] = useState('');
+  const [tagInput, setTagInput] = useState('');
+  const [skillInput, setSkillInput] = useState('');
+  const [requirementInput, setRequirementInput] = useState('');
+  const [learnInput, setLearnInput] = useState('');
+
   // Form
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: "",
-      description: "",
-      instructor: "",
-      instructorRole: "",
-      bio: "",
-      thumbnailUrl: "https://source.unsplash.com/random/600x400?coding",
-      videoUrl: "https://www.youtube.com/embed/dGcsHMXbSOA",
-      duration: "",
-      level: "All Levels",
-      language: "Tiếng Việt",
+      title: '',
+      description: '',
+      instructor: '',
+      instructorRole: '',
+      bio: '',
+      thumbnailUrl: 'https://source.unsplash.com/random/600x400?coding',
+      videoUrl: 'https://www.youtube.com/embed/dGcsHMXbSOA',
+      duration: '',
+      level: 'All Levels',
+      language: 'Tiếng Việt',
       price: 0,
       discount: 0,
+      isPopular: false,
     },
   });
 
@@ -83,7 +88,7 @@ export default function CreateCoursePage() {
   ) => {
     if (value.trim() && !array.includes(value.trim())) {
       setArray([...array, value.trim()]);
-      setInputValue("");
+      setInputValue('');
     }
   };
 
@@ -100,7 +105,7 @@ export default function CreateCoursePage() {
     const newModule: Module = {
       id: `module-${modules.length + 1}`,
       title: `Module ${modules.length + 1}`,
-      duration: "0h 0m",
+      duration: '0h 0m',
       lessons: [],
     };
     setModules([...modules, newModule]);
@@ -120,12 +125,12 @@ export default function CreateCoursePage() {
     const newLesson: Lesson = {
       id: `lesson-${moduleIndex + 1}-${modules[moduleIndex].lessons.length + 1}`,
       title: `Lesson ${modules[moduleIndex].lessons.length + 1}`,
-      duration: "0m",
+      duration: '0m',
       isFree: false,
-      type: "video",
-      videoUrl: "https://youtu.be/dGcsHMXbSOA",
+      type: 'video',
+      videoUrl: 'https://youtu.be/example',
     };
-    
+
     const newModules = [...modules];
     newModules[moduleIndex].lessons = [...newModules[moduleIndex].lessons, newLesson];
     setModules(newModules);
@@ -150,50 +155,64 @@ export default function CreateCoursePage() {
     setModules(newModules);
   };
 
+  // Xử lý FAQ
+  const addFaq = () => {
+    if (faqQuestion.trim() && faqAnswer.trim()) {
+      setFaqs([...faqs, { question: faqQuestion, answer: faqAnswer }]);
+      setFaqQuestion('');
+      setFaqAnswer('');
+    }
+  };
+
+  const removeFaq = (index: number) => {
+    setFaqs(faqs.filter((_, i) => i !== index));
+  };
+
   // Form submission
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     // Kiểm tra các mảng bắt buộc không được rỗng
     if (categories.length === 0) {
-      alert("Vui lòng thêm ít nhất một danh mục cho khóa học");
+      alert('Please add at least one category for the course');
       return;
     }
     if (skills.length === 0) {
-      alert("Vui lòng thêm ít nhất một kỹ năng cho khóa học");
+      alert('Please add at least one skill for the course');
       return;
     }
     if (requirements.length === 0) {
-      alert("Vui lòng thêm ít nhất một yêu cầu cho khóa học");
+      alert('Please add at least one requirement for the course');
       return;
     }
     if (whatYouWillLearn.length === 0) {
-      alert("Vui lòng thêm ít nhất một điều học viên sẽ học được");
+      alert('Please add at least one thing learners will gain from this course');
       return;
     }
     if (modules.length === 0) {
-      alert("Vui lòng thêm ít nhất một module cho khóa học");
+      alert('Please add at least one module for the course');
       return;
     }
 
     // Tạo slug từ tiêu đề
     const slug = values.title
       .toLowerCase()
-      .replace(/[^\w\s]/gi, "")
-      .replace(/\s+/g, "-");
+      .replace(/[^\w\s]/gi, '')
+      .replace(/\s+/g, '-');
 
     // Tạo object khóa học hoàn chỉnh
     const newCourse: Course = {
       id: slug,
       slug,
       ...values,
-      instructorAvatarUrl: "https://i.pravatar.cc/150?img=10",
+      instructorAvatarUrl: 'https://i.pravatar.cc/150?img=10',
       rating: 0,
       reviewCount: 0,
       enrollmentCount: 0,
-      lastUpdate: new Date().toLocaleDateString("vi-VN", {
-        month: "long",
-        year: "numeric",
+      lastUpdate: new Date().toLocaleDateString('vi-VN', {
+        month: 'long',
+        year: 'numeric',
       }),
       originalPrice: values.price,
+      isPopular: false, // Thêm trường isPopular
       isNew: true,
       previewAvailable: true,
       categories,
@@ -203,13 +222,20 @@ export default function CreateCoursePage() {
       whatYouWillLearn,
       modules,
       reviews: [],
-      faq: [],
+      faq: faqs, // Thêm FAQ từ state
       relatedCourseIds: [],
     };
 
-    console.log("Khóa học đã được tạo:", newCourse);
-    alert("Khóa học đã được tạo thành công!");
-    router.push("/explore");
+    console.log('Khóa học đã được tạo:', newCourse);
+    try {
+      dispatch(createCourse(newCourse));
+    } catch (error) {
+      console.error('Error creating course:', error);
+      alert('Có lỗi xảy ra khi tạo khóa học. Vui lòng thử lại.');
+      return;
+    }
+    alert('Khóa học đã được tạo thành công!');
+    router.push('/explore');
   };
 
   return (
@@ -292,6 +318,16 @@ export default function CreateCoursePage() {
                     </FormItem>
                   )}
                 />
+              </div>
+              <div className="flex items-center mt-4">
+                <input
+                  type="checkbox"
+                  id="isPopular"
+                  checked={form.watch('isPopular') || false}
+                  onChange={(e) => form.setValue('isPopular', e.target.checked)}
+                  className="mr-2"
+                />
+                <label htmlFor="isPopular">Mark as Popular Course</label>
               </div>
             </CardContent>
           </Card>
@@ -687,7 +723,7 @@ export default function CreateCoursePage() {
                       addToArray(learnInput, whatYouWillLearn, setWhatYouWillLearn, setLearnInput)
                     }
                   >
-                    Thêm
+                    Add
                   </Button>
                 </div>
                 {whatYouWillLearn.length === 0 && (
@@ -897,6 +933,66 @@ export default function CreateCoursePage() {
               {modules.length === 0 && (
                 <p className="text-sm text-red-500 mt-2">Please add at least one module</p>
               )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Frequently Asked Questions</CardTitle>
+              <CardDescription>Add common questions and answers about the course</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-4">
+                {faqs.map((faq, index) => (
+                  <div key={index} className="border rounded-md p-3 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <h5 className="font-medium">Question {index + 1}</h5>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={() => removeFaq(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <div className="grid gap-2">
+                      <div>
+                        <FormLabel className="text-xs">Question</FormLabel>
+                        <div className="bg-slate-50 p-2 rounded text-sm">{faq.question}</div>
+                      </div>
+                      <div>
+                        <FormLabel className="text-xs">Answer</FormLabel>
+                        <div className="bg-slate-50 p-2 rounded text-sm">{faq.answer}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-2">
+                <div>
+                  <FormLabel>Question</FormLabel>
+                  <Input
+                    value={faqQuestion}
+                    onChange={(e) => setFaqQuestion(e.target.value)}
+                    placeholder="E.g. How long can I access this course?"
+                  />
+                </div>
+                <div>
+                  <FormLabel>Answer</FormLabel>
+                  <Textarea
+                    value={faqAnswer}
+                    onChange={(e) => setFaqAnswer(e.target.value)}
+                    placeholder="E.g. You'll have lifetime access to this course."
+                    className="min-h-[80px]"
+                  />
+                </div>
+                <Button type="button" variant="outline" onClick={addFaq} className="mt-2 w-full">
+                  <Plus className="mr-2 h-4 w-4" /> Add FAQ
+                </Button>
+              </div>
             </CardContent>
           </Card>
 

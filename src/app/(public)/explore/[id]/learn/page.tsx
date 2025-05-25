@@ -6,9 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Textarea } from "@/components/ui/textarea";
-import { courses } from "@/data/course";
-import { Course } from "@/types/course";
+import { Textarea } from '@/components/ui/textarea';
+import { Course } from '@/types/course';
 import {
   ArrowLeft,
   BookOpen,
@@ -30,31 +29,34 @@ import {
   Target,
   Users,
   X,
-  Zap
-} from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+  Zap,
+} from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { toast } from 'sonner';
 
 const LearnPage = () => {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  
+  const courses = useSelector((state) => state.courses.courses);
+
   const [course, setCourse] = useState<Course | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedLesson, setSelectedLesson] = useState<any>(null);
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
-  const [noteContent, setNoteContent] = useState("");
+  const [noteContent, setNoteContent] = useState('');
   const [studyTime, setStudyTime] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [autoplay, setAutoplay] = useState(true);
-  
+
   useEffect(() => {
     setIsLoading(true);
     const c = courses.find((c) => c.id === id) ?? null;
+    console.log(c);
 
     setTimeout(() => {
       setCourse(c);
