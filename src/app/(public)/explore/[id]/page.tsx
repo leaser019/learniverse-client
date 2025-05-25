@@ -11,7 +11,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { courses } from '@/data/course';
 import { Course } from '@/types/course';
 import { motion } from 'framer-motion';
 import {
@@ -38,10 +37,12 @@ import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 
 const CourseDetail = () => {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const courses = useSelector((state: any) => state.courses.courses);
 
   const [course, setCourse] = useState<Course | null>(null);
   const [activeTab, setActiveTab] = useState<
@@ -77,7 +78,7 @@ const CourseDetail = () => {
       <div className="container mx-auto max-w-screen-xl flex min-h-screen flex-col items-center justify-center py-20">
         <h1 className="mb-4 text-3xl font-bold text-red-600">Course not found</h1>
         <p className="mb-8 text-gray-600">
-          The course you’re looking for doesn’t exist or has been removed.
+          The course you&apos;re looking for doesn&apos;t exist or has been removed.
         </p>
         <Button onClick={backToExplore}>Back to explore</Button>
       </div>

@@ -1,6 +1,6 @@
+import envConfig from '@/config';
 import { HEADER } from '@/constants';
 import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import envConfig from '@/config';
 interface ApiResponse {
   data: unknown;
   status: number;

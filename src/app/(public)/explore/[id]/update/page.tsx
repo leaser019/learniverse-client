@@ -9,14 +9,17 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { courses } from "@/data/course";
-import { Course, Lesson, Module } from "@/types/course";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Pencil, Plus, Trash2, X } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { deleteCourse, updateCourse } from '@/redux/slices/courseSlice';
+import { Course, Lesson, Module } from '@/types/course';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { ArrowLeft, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useDispatch, useSelector } from 'react-redux';
+import * as z from 'zod';
+import { FailureModal } from './../../../../../components/modal/FailureModal';
+import { SuccessModal } from './../../../../../components/modal/SuccessModal';
 
 const formSchema = z.object({
   title: z.string().min(5, 'Course title must be at least 5 characters long'),
@@ -33,13 +36,15 @@ const formSchema = z.object({
   discount: z.coerce.number().min(0).max(1, 'Discount must be between 0 and 1'),
 });
 
-const courseLevels = ['Beginner', 'Intermediate', 'Advanced', 'All Levels'];
-const allCategories = Array.from(new Set(courses.flatMap((c) => c.categories)));
-
 export default function UpdateCoursePage() {
   const router = useRouter();
   const params = useParams();
+  const courses = useSelector((state) => state.courses.courses);
   const courseId = params?.id as string;
+  const dispatch = useDispatch();
+
+  const courseLevels = ['Beginner', 'Intermediate', 'Advanced', 'All Levels'];
+  const allCategories = Array.from(new Set(courses.flatMap((c) => c.categories)));
 
   const [categories, setCategories] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
@@ -48,6 +53,10 @@ export default function UpdateCoursePage() {
   const [whatYouWillLearn, setWhatYouWillLearn] = useState<string[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [courseData, setCourseData] = useState<Course | null>(null);
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [failureModalOpen, setFailureModalOpen] = useState(false);
+  const [message, setMessage] = useState('');
 
   // Input states for dynamic arrays
   const [categoryInput, setCategoryInput] = useState('');
@@ -78,9 +87,9 @@ export default function UpdateCoursePage() {
   // Load course data từ ID
   useEffect(() => {
     const course = courses.find((c) => c.id === courseId);
-
+    setCourseData(course);
     if (!course) {
-      alert('Không tìm thấy khóa học!');
+      alert('Can not find course!');
       router.push('/explore');
       return;
     }
@@ -108,7 +117,7 @@ export default function UpdateCoursePage() {
     setRequirements(course.requirements);
     setWhatYouWillLearn(course.whatYouWillLearn);
     setModules(course.modules);
-  }, [courseId, form, router]);
+  }, [courseId, courses, form, router]);
 
   // Helper functions cho các mảng động
   const addToArray = (
@@ -188,32 +197,39 @@ export default function UpdateCoursePage() {
 
   // Xóa khóa học
   const handleDeleteCourse = () => {
-    console.log('Đã xóa khóa học:', courseId);
-    alert(`Đã xóa khóa học ${courseId} thành công!`);
-    router.push('/explore');
+    try {
+      dispatch(deleteCourse(courseId));
+      console.log('Đã xóa khóa học:', courseId);
+      setMessage('Course deleted successfully');
+      setSuccessModalOpen(true);
+    } catch (error) {
+      console.error('Error deleting course:', error);
+      setFailureModalOpen(true);
+      return;
+    }
   };
 
   // Form submission
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     // Kiểm tra các mảng bắt buộc không được rỗng
     if (categories.length === 0) {
-      alert('Vui lòng thêm ít nhất một danh mục cho khóa học');
+      alert('Please add at least one category for the course');
       return;
     }
     if (skills.length === 0) {
-      alert('Vui lòng thêm ít nhất một kỹ năng cho khóa học');
+      alert('Please add at least one skill for the course');
       return;
     }
     if (requirements.length === 0) {
-      alert('Vui lòng thêm ít nhất một yêu cầu cho khóa học');
+      alert('Please add at least one requirement for the course');
       return;
     }
     if (whatYouWillLearn.length === 0) {
-      alert('Vui lòng thêm ít nhất một điều học viên sẽ học được');
+      alert('Please add at least one thing learners will gain from the course');
       return;
     }
     if (modules.length === 0) {
-      alert('Vui lòng thêm ít nhất một module cho khóa học');
+      alert('Please add at least one module for the course');
       return;
     }
 
@@ -244,78 +260,68 @@ export default function UpdateCoursePage() {
       relatedCourseIds: [],
     };
 
-    console.log('Khóa học đã được cập nhật:', updatedCourse);
-    alert('Cập nhật khóa học thành công!');
-    router.push('/explore');
+    try {
+      await dispatch(updateCourse({ id: courseId, courseData: updatedCourse }));
+      setMessage('Course updated successfully!');
+      setSuccessModalOpen(true);
+      console.log('Khóa học đã được cập nhật:', updatedCourse);
+    } catch (error) {
+      console.error('Error updating course:', error);
+      setFailureModalOpen(true);
+      return;
+    }
   };
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-2">
-      <Title
-        title="Update Course"
-        description="Edit and update the content of your course."
-        accentColor="amber"
+    <>
+      <SuccessModal
+        isOpen={successModalOpen}
+        onClose={() => {
+          setSuccessModalOpen(false);
+          router.push('/explore');
+        }}
+        title="Success"
+        message={message}
       />
+      <FailureModal
+        isOpen={failureModalOpen}
+        onClose={() => setFailureModalOpen(false)}
+        title="Error"
+        message={message}
+      />
+      <div className="container mx-auto max-w-5xl px-4 py-2">
+        <Title
+          title="Update Course"
+          description="Edit and update the content of your course."
+          accentColor="amber"
+        />
 
-      <div className="mb-6 flex justify-between">
-        <Button variant="outline" onClick={() => router.push('/explore')}>
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back
-        </Button>
+        <div className="mb-6 flex justify-between">
+          <Button variant="outline" onClick={() => router.push('/explore')}>
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back
+          </Button>
 
-        <Button variant="destructive" onClick={() => setShowDeleteDialog(true)} className="gap-2">
-          <Trash2 className="h-4 w-4" /> Delete Course
-        </Button>
-      </div>
+          <Button variant="destructive" onClick={() => setShowDeleteDialog(true)} className="gap-2">
+            <Trash2 className="h-4 w-4" /> Delete Course
+          </Button>
+        </div>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Thông tin cơ bản</CardTitle>
-              <CardDescription>Nhập thông tin chính về khóa học của bạn</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tiêu đề khóa học</FormLabel>
-                    <FormControl>
-                      <Input placeholder="React: The Complete Guide" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mô tả khóa học</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Mô tả chi tiết về khóa học của bạn..."
-                        className="min-h-[100px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Basic Information</CardTitle>
+                <CardDescription>Enter the main information about your course</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="thumbnailUrl"
+                  name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>URL ảnh thumbnail</FormLabel>
+                      <FormLabel>Course Title</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://example.com/image.jpg" {...field} />
+                        <Input placeholder="React: The Complete Guide" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -324,652 +330,716 @@ export default function UpdateCoursePage() {
 
                 <FormField
                   control={form.control}
-                  name="videoUrl"
+                  name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>URL video giới thiệu</FormLabel>
+                      <FormLabel>Course Description</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://youtube.com/embed/xyz" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Thông tin giảng viên</CardTitle>
-              <CardDescription>Thông tin về người sẽ giảng dạy khóa học này</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="instructor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tên giảng viên</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nguyễn Văn A" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="instructorRole"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Chức danh</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Senior Developer" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="bio"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tiểu sử</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Thông tin về kinh nghiệm của giảng viên..."
-                        className="min-h-[100px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Chi tiết khóa học</CardTitle>
-              <CardDescription>Thông tin về mức độ, giá cả và các chi tiết khác</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <FormField
-                  control={form.control}
-                  name="duration"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Thời lượng</FormLabel>
-                      <FormControl>
-                        <Input placeholder="12h 30m" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Ví dụ: &apos;5h 30m&apos;, &apos;12h 45m&apos;
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="level"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cấp độ</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Chọn cấp độ" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {courseLevels.map((level) => (
-                            <SelectItem key={level} value={level}>
-                              {level}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="language"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Ngôn ngữ</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Tiếng Việt" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Giá (VND)</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="0" min="0" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="discount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Giảm giá (0-1)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="0"
-                          min="0"
-                          max="1"
-                          step="0.01"
+                        <Textarea
+                          placeholder="Detailed description of your course..."
+                          className="min-h-[100px]"
                           {...field}
                         />
                       </FormControl>
-                      <FormDescription>Ví dụ: 0.2 = giảm 20%, 0.5 = giảm 50%</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Danh mục & Từ khóa</CardTitle>
-              <CardDescription>Phân loại và tìm kiếm khóa học của bạn</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <FormLabel>Danh mục</FormLabel>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {categories.map((cat) => (
-                    <div key={cat} className="flex items-center bg-slate-100 rounded-md px-2 py-1">
-                      <span>{cat}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 ml-1"
-                        onClick={() => removeFromArray(cat, categories, setCategories)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex mt-2">
-                  <Select
-                    onValueChange={(value) => {
-                      if (value && !categories.includes(value)) {
-                        setCategories([...categories, value]);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Chọn danh mục" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allCategories.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex mt-2">
-                  <Input
-                    placeholder="Hoặc nhập danh mục mới..."
-                    value={categoryInput}
-                    onChange={(e) => setCategoryInput(e.target.value)}
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="thumbnailUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Thumbnail URL</FormLabel>
+                        <FormControl>
+                          <Input placeholder="https://example.com/image.jpg" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="ml-2"
-                    onClick={() =>
-                      addToArray(categoryInput, categories, setCategories, setCategoryInput)
-                    }
-                  >
-                    Thêm
-                  </Button>
-                </div>
-                {categories.length === 0 && (
-                  <p className="text-sm text-red-500 mt-2">Vui lòng thêm ít nhất một danh mục</p>
-                )}
-              </div>
 
-              <div>
-                <FormLabel>Từ khóa</FormLabel>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {tags.map((tag) => (
-                    <div key={tag} className="flex items-center bg-slate-100 rounded-md px-2 py-1">
-                      <span>{tag}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 ml-1"
-                        onClick={() => removeFromArray(tag, tags, setTags)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex mt-2">
-                  <Input
-                    placeholder="Nhập từ khóa..."
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
+                  <FormField
+                    control={form.control}
+                    name="videoUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Video URL</FormLabel>
+                        <FormControl>
+                          <Input placeholder="https://youtube.com/embed/xyz" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="ml-2"
-                    onClick={() => addToArray(tagInput, tags, setTags, setTagInput)}
-                  >
-                    Thêm
-                  </Button>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Kỹ năng & Yêu cầu</CardTitle>
-              <CardDescription>Kỹ năng học viên sẽ đạt được và yêu cầu đầu vào</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <FormLabel>Kỹ năng sẽ đạt được</FormLabel>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {skills.map((skill) => (
-                    <div
-                      key={skill}
-                      className="flex items-center bg-slate-100 rounded-md px-2 py-1"
-                    >
-                      <span>{skill}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 ml-1"
-                        onClick={() => removeFromArray(skill, skills, setSkills)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex mt-2">
-                  <Input
-                    placeholder="Nhập kỹ năng..."
-                    value={skillInput}
-                    onChange={(e) => setSkillInput(e.target.value)}
+            <Card>
+              <CardHeader>
+                <CardTitle>Instructor Information</CardTitle>
+                <CardDescription>Information about the person teaching this course</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="instructor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Instructor Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nguyễn Văn A" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="ml-2"
-                    onClick={() => addToArray(skillInput, skills, setSkills, setSkillInput)}
-                  >
-                    Thêm
-                  </Button>
-                </div>
-                {skills.length === 0 && (
-                  <p className="text-sm text-red-500 mt-2">Vui lòng thêm ít nhất một kỹ năng</p>
-                )}
-              </div>
 
-              <div>
-                <FormLabel>Yêu cầu đầu vào</FormLabel>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {requirements.map((req) => (
-                    <div key={req} className="flex items-center bg-slate-100 rounded-md px-2 py-1">
-                      <span>{req}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 ml-1"
-                        onClick={() => removeFromArray(req, requirements, setRequirements)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex mt-2">
-                  <Input
-                    placeholder="Nhập yêu cầu..."
-                    value={requirementInput}
-                    onChange={(e) => setRequirementInput(e.target.value)}
+                  <FormField
+                    control={form.control}
+                    name="instructorRole"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Instructor Role</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Senior Developer" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="ml-2"
-                    onClick={() =>
-                      addToArray(
-                        requirementInput,
-                        requirements,
-                        setRequirements,
-                        setRequirementInput
-                      )
-                    }
-                  >
-                    Thêm
-                  </Button>
                 </div>
-                {requirements.length === 0 && (
-                  <p className="text-sm text-red-500 mt-2">Vui lòng thêm ít nhất một yêu cầu</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Điều học viên sẽ học được</CardTitle>
-              <CardDescription>Liệt kê những gì học viên sẽ học được sau khóa học</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {whatYouWillLearn.map((item) => (
-                    <div key={item} className="flex items-center bg-slate-100 rounded-md px-2 py-1">
-                      <span>{item}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 ml-1"
-                        onClick={() => removeFromArray(item, whatYouWillLearn, setWhatYouWillLearn)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex mt-2">
-                  <Input
-                    placeholder="Nhập điều học viên sẽ học được..."
-                    value={learnInput}
-                    onChange={(e) => setLearnInput(e.target.value)}
+                <FormField
+                  control={form.control}
+                  name="bio"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bio</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Information about the instructor's experience..."
+                          className="min-h-[100px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Course Details</CardTitle>
+                <CardDescription>
+                  Information about the level, price, and other details
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  <FormField
+                    control={form.control}
+                    name="duration"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Duration</FormLabel>
+                        <FormControl>
+                          <Input placeholder="12h 30m" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          For example: &apos;5h 30m&apos;, &apos;12h 45m&apos;
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="ml-2"
-                    onClick={() =>
-                      addToArray(learnInput, whatYouWillLearn, setWhatYouWillLearn, setLearnInput)
-                    }
-                  >
-                    Thêm
-                  </Button>
-                </div>
-                {whatYouWillLearn.length === 0 && (
-                  <p className="text-sm text-red-500 mt-2">
-                    Vui lòng thêm ít nhất một điều học viên sẽ học được
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Nội dung khóa học</CardTitle>
-                <CardDescription>Thêm các module và bài học cho khóa học</CardDescription>
-              </div>
-              <Button type="button" variant="outline" onClick={addModule} className="gap-1">
-                <Plus className="h-4 w-4" /> Thêm Module
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {modules.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>Chưa có module nào. Hãy thêm module đầu tiên!</p>
+                  <FormField
+                    control={form.control}
+                    name="level"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Level</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select level" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {courseLevels.map((level) => (
+                              <SelectItem key={level} value={level}>
+                                {level}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="language"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Language</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Vietnamese" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
-              ) : (
-                <div className="space-y-8">
-                  {modules.map((module, moduleIndex) => (
-                    <div key={module.id} className="border rounded-lg p-4 space-y-4">
-                      <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-medium">Module {moduleIndex + 1}</h3>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Price (VND)</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="0" min="0" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="discount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Discount (0-1)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="0"
+                            min="0"
+                            max="1"
+                            step="0.01"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>For example: 0.2 = 20% off, 0.5 = 50% off</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Categories & Keywords</CardTitle>
+                <CardDescription>Classify and search for your course</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <FormLabel>Categories</FormLabel>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {categories.map((cat) => (
+                      <div
+                        key={cat}
+                        className="flex items-center bg-slate-100 rounded-md px-2 py-1"
+                      >
+                        <span>{cat}</span>
                         <Button
-                          type="button"
                           variant="ghost"
-                          onClick={() => removeModule(moduleIndex)}
-                          className="h-8 w-8 p-0"
+                          size="sm"
+                          className="h-8 w-8 p-0 ml-1"
+                          onClick={() => removeFromArray(cat, categories, setCategories)}
                         >
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
+                    ))}
+                  </div>
+                  <div className="flex mt-2">
+                    <Select
+                      onValueChange={(value) => {
+                        if (value && !categories.includes(value)) {
+                          setCategories([...categories, value]);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Chọn danh mục" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allCategories.map((cat) => (
+                          <SelectItem key={cat} value={cat}>
+                            {cat}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex mt-2">
+                    <Input
+                      placeholder="Hoặc nhập danh mục mới..."
+                      value={categoryInput}
+                      onChange={(e) => setCategoryInput(e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="ml-2"
+                      onClick={() =>
+                        addToArray(categoryInput, categories, setCategories, setCategoryInput)
+                      }
+                    >
+                      Add
+                    </Button>
+                  </div>
+                  {categories.length === 0 && (
+                    <p className="text-sm text-red-500 mt-2">Please add at least one category</p>
+                  )}
+                </div>
 
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <div>
-                          <FormLabel>Tiêu đề</FormLabel>
-                          <Input
-                            value={module.title}
-                            onChange={(e) => updateModule(moduleIndex, 'title', e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <FormLabel>Thời lượng</FormLabel>
-                          <Input
-                            value={module.duration}
-                            onChange={(e) => updateModule(moduleIndex, 'duration', e.target.value)}
-                            placeholder="vd: 2h 30m"
-                          />
-                        </div>
+                <div>
+                  <FormLabel>Keywords</FormLabel>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {tags.map((tag) => (
+                      <div
+                        key={tag}
+                        className="flex items-center bg-slate-100 rounded-md px-2 py-1"
+                      >
+                        <span>{tag}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 ml-1"
+                          onClick={() => removeFromArray(tag, tags, setTags)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
+                    ))}
+                  </div>
+                  <div className="flex mt-2">
+                    <Input
+                      placeholder="Enter keywords..."
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="ml-2"
+                      onClick={() => addToArray(tagInput, tags, setTags, setTagInput)}
+                    >
+                      Add
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-                      <Separator className="my-4" />
+            <Card>
+              <CardHeader>
+                <CardTitle>Skills & Requirements</CardTitle>
+                <CardDescription>Skills learners will gain and prerequisites</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <FormLabel>Skills to be Acquired</FormLabel>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {skills.map((skill) => (
+                      <div
+                        key={skill}
+                        className="flex items-center bg-slate-100 rounded-md px-2 py-1"
+                      >
+                        <span>{skill}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 ml-1"
+                          onClick={() => removeFromArray(skill, skills, setSkills)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex mt-2">
+                    <Input
+                      placeholder="Nhập kỹ năng..."
+                      value={skillInput}
+                      onChange={(e) => setSkillInput(e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="ml-2"
+                      onClick={() => addToArray(skillInput, skills, setSkills, setSkillInput)}
+                    >
+                      Add Skill
+                    </Button>
+                  </div>
+                  {skills.length === 0 && (
+                    <p className="text-sm text-red-500 mt-2">Please add at least one skill</p>
+                  )}
+                </div>
 
-                      <div className="space-y-2">
+                <div>
+                  <FormLabel>Prerequisites</FormLabel>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {requirements.map((req) => (
+                      <div
+                        key={req}
+                        className="flex items-center bg-slate-100 rounded-md px-2 py-1"
+                      >
+                        <span>{req}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 ml-1"
+                          onClick={() => removeFromArray(req, requirements, setRequirements)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex mt-2">
+                    <Input
+                      placeholder="Nhập yêu cầu..."
+                      value={requirementInput}
+                      onChange={(e) => setRequirementInput(e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="ml-2"
+                      onClick={() =>
+                        addToArray(
+                          requirementInput,
+                          requirements,
+                          setRequirements,
+                          setRequirementInput
+                        )
+                      }
+                    >
+                      Add Requirement
+                    </Button>
+                  </div>
+                  {requirements.length === 0 && (
+                    <p className="text-sm text-red-500 mt-2">
+                      Please add at least one prerequisite
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>What Learners Will Gain</CardTitle>
+                <CardDescription>List what learners will gain from the course</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {whatYouWillLearn.map((item) => (
+                      <div
+                        key={item}
+                        className="flex items-center bg-slate-100 rounded-md px-2 py-1"
+                      >
+                        <span>{item}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 ml-1"
+                          onClick={() =>
+                            removeFromArray(item, whatYouWillLearn, setWhatYouWillLearn)
+                          }
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex mt-2">
+                    <Input
+                      placeholder="Nhập điều học viên sẽ học được..."
+                      value={learnInput}
+                      onChange={(e) => setLearnInput(e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="ml-2"
+                      onClick={() =>
+                        addToArray(learnInput, whatYouWillLearn, setWhatYouWillLearn, setLearnInput)
+                      }
+                    >
+                      Add
+                    </Button>
+                  </div>
+                  {whatYouWillLearn.length === 0 && (
+                    <p className="text-sm text-red-500 mt-2">
+                      Please add at least one thing learners will gain from this course
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Course Content</CardTitle>
+                  <CardDescription>Add modules and lessons to the course </CardDescription>
+                </div>
+                <Button type="button" variant="outline" onClick={addModule} className="gap-1">
+                  <Plus className="h-4 w-4" /> Add Module
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {modules.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No modules added yet. Please add your first module!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-8">
+                    {modules.map((module, moduleIndex) => (
+                      <div key={module.id} className="border rounded-lg p-4 space-y-4">
                         <div className="flex justify-between items-center">
-                          <h4 className="font-medium">Bài học</h4>
+                          <h3 className="text-lg font-medium">Module {moduleIndex + 1}</h3>
                           <Button
                             type="button"
-                            variant="outline"
-                            onClick={() => addLesson(moduleIndex)}
-                            size="sm"
-                            className="gap-1"
+                            variant="ghost"
+                            onClick={() => removeModule(moduleIndex)}
+                            className="h-8 w-8 p-0"
                           >
-                            <Plus className="h-3 w-3" /> Thêm bài học
+                            <X className="h-4 w-4" />
                           </Button>
                         </div>
 
-                        {module.lessons.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">
-                            Module này chưa có bài học nào
-                          </p>
-                        ) : (
-                          <div className="space-y-3">
-                            {module.lessons.map((lesson, lessonIndex) => (
-                              <div key={lesson.id} className="border rounded-md p-3 space-y-3">
-                                <div className="flex justify-between items-center">
-                                  <h5 className="text-sm font-medium">Bài {lessonIndex + 1}</h5>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    onClick={() => removeLesson(moduleIndex, lessonIndex)}
-                                    size="sm"
-                                    className="h-6 w-6 p-0"
-                                  >
-                                    <X className="h-3 w-3" />
-                                  </Button>
-                                </div>
-
-                                <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                                  <div>
-                                    <FormLabel className="text-xs">Tiêu đề</FormLabel>
-                                    <Input
-                                      className="h-8 text-sm"
-                                      value={lesson.title}
-                                      onChange={(e) =>
-                                        updateLesson(
-                                          moduleIndex,
-                                          lessonIndex,
-                                          'title',
-                                          e.target.value
-                                        )
-                                      }
-                                    />
-                                  </div>
-                                  <div>
-                                    <FormLabel className="text-xs">Thời lượng</FormLabel>
-                                    <Input
-                                      className="h-8 text-sm"
-                                      value={lesson.duration}
-                                      onChange={(e) =>
-                                        updateLesson(
-                                          moduleIndex,
-                                          lessonIndex,
-                                          'duration',
-                                          e.target.value
-                                        )
-                                      }
-                                      placeholder="vd: 45m"
-                                    />
-                                  </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                                  <div>
-                                    <FormLabel className="text-xs">Loại</FormLabel>
-                                    <Select
-                                      value={lesson.type}
-                                      onValueChange={(value) =>
-                                        updateLesson(moduleIndex, lessonIndex, 'type', value as any)
-                                      }
-                                    >
-                                      <SelectTrigger className="h-8 text-sm">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="video">Video</SelectItem>
-                                        <SelectItem value="exercise">Bài tập</SelectItem>
-                                        <SelectItem value="quiz">Quiz</SelectItem>
-                                        <SelectItem value="project">Dự án</SelectItem>
-                                        <SelectItem value="challenge">Thử thách</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                  <div className="flex items-center">
-                                    <input
-                                      type="checkbox"
-                                      id={`free-${module.id}-${lesson.id}`}
-                                      checked={lesson.isFree}
-                                      onChange={(e) =>
-                                        updateLesson(
-                                          moduleIndex,
-                                          lessonIndex,
-                                          'isFree',
-                                          e.target.checked
-                                        )
-                                      }
-                                      className="mr-2"
-                                    />
-                                    <label
-                                      htmlFor={`free-${module.id}-${lesson.id}`}
-                                      className="text-xs"
-                                    >
-                                      Bài học miễn phí
-                                    </label>
-                                  </div>
-                                </div>
-
-                                {lesson.type === 'video' && (
-                                  <div>
-                                    <FormLabel className="text-xs">URL Video</FormLabel>
-                                    <Input
-                                      className="h-8 text-sm"
-                                      value={lesson.videoUrl || ''}
-                                      onChange={(e) =>
-                                        updateLesson(
-                                          moduleIndex,
-                                          lessonIndex,
-                                          'videoUrl',
-                                          e.target.value
-                                        )
-                                      }
-                                      placeholder="https://youtu.be/..."
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            ))}
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                          <div>
+                            <FormLabel>Title</FormLabel>
+                            <Input
+                              value={module.title}
+                              onChange={(e) => updateModule(moduleIndex, 'title', e.target.value)}
+                            />
                           </div>
-                        )}
+                          <div>
+                            <FormLabel>Duration</FormLabel>
+                            <Input
+                              value={module.duration}
+                              onChange={(e) =>
+                                updateModule(moduleIndex, 'duration', e.target.value)
+                              }
+                              placeholder="e.g. 2h 30m"
+                            />
+                          </div>
+                        </div>
+
+                        <Separator className="my-4" />
+
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <h4 className="font-medium">Lessons</h4>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => addLesson(moduleIndex)}
+                              size="sm"
+                              className="gap-1"
+                            >
+                              <Plus className="h-3 w-3" /> Add Lesson
+                            </Button>
+                          </div>
+
+                          {module.lessons.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">
+                              No lessons added yet. Please add your first lesson!
+                            </p>
+                          ) : (
+                            <div className="space-y-3">
+                              {module.lessons.map((lesson, lessonIndex) => (
+                                <div key={lesson.id} className="border rounded-md p-3 space-y-3">
+                                  <div className="flex justify-between items-center">
+                                    <h5 className="text-sm font-medium">
+                                      Lesson {lessonIndex + 1}
+                                    </h5>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      onClick={() => removeLesson(moduleIndex, lessonIndex)}
+                                      size="sm"
+                                      className="h-6 w-6 p-0"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                                    <div>
+                                      <FormLabel className="text-xs">Title</FormLabel>
+                                      <Input
+                                        className="h-8 text-sm"
+                                        value={lesson.title}
+                                        onChange={(e) =>
+                                          updateLesson(
+                                            moduleIndex,
+                                            lessonIndex,
+                                            'title',
+                                            e.target.value
+                                          )
+                                        }
+                                      />
+                                    </div>
+                                    <div>
+                                      <FormLabel className="text-xs">Duration</FormLabel>
+                                      <Input
+                                        className="h-8 text-sm"
+                                        value={lesson.duration}
+                                        onChange={(e) =>
+                                          updateLesson(
+                                            moduleIndex,
+                                            lessonIndex,
+                                            'duration',
+                                            e.target.value
+                                          )
+                                        }
+                                        placeholder="vd: 45m"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                                    <div>
+                                      <FormLabel className="text-xs">Type</FormLabel>
+                                      <Select
+                                        value={lesson.type}
+                                        onValueChange={(value) =>
+                                          updateLesson(
+                                            moduleIndex,
+                                            lessonIndex,
+                                            'type',
+                                            value as any
+                                          )
+                                        }
+                                      >
+                                        <SelectTrigger className="h-8 text-sm">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="video">Video</SelectItem>
+                                          <SelectItem value="exercise">Exercise</SelectItem>
+                                          <SelectItem value="quiz">Quiz</SelectItem>
+                                          <SelectItem value="project">Project</SelectItem>
+                                          <SelectItem value="challenge">Challenge</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div className="flex items-center">
+                                      <input
+                                        type="checkbox"
+                                        id={`free-${module.id}-${lesson.id}`}
+                                        checked={lesson.isFree}
+                                        onChange={(e) =>
+                                          updateLesson(
+                                            moduleIndex,
+                                            lessonIndex,
+                                            'isFree',
+                                            e.target.checked
+                                          )
+                                        }
+                                        className="mr-2"
+                                      />
+                                      <label
+                                        htmlFor={`free-${module.id}-${lesson.id}`}
+                                        className="text-xs"
+                                      >
+                                        Free Lesson
+                                      </label>
+                                    </div>
+                                  </div>
+
+                                  {lesson.type === 'video' && (
+                                    <div>
+                                      <FormLabel className="text-xs">Video URL</FormLabel>
+                                      <Input
+                                        className="h-8 text-sm"
+                                        value={lesson.videoUrl || ''}
+                                        onChange={(e) =>
+                                          updateLesson(
+                                            moduleIndex,
+                                            lessonIndex,
+                                            'videoUrl',
+                                            e.target.value
+                                          )
+                                        }
+                                        placeholder="https://youtu.be/..."
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {modules.length === 0 && (
-                <p className="text-sm text-red-500 mt-2">Vui lòng thêm ít nhất một module</p>
-              )}
-            </CardContent>
-          </Card>
+                    ))}
+                  </div>
+                )}
+                {modules.length === 0 && (
+                  <p className="text-sm text-red-500 mt-2">Please add at least one module</p>
+                )}
+              </CardContent>
+            </Card>
 
-          <CardFooter className="flex justify-end space-x-4 border rounded-lg py-4">
-            <Button type="button" variant="outline" onClick={() => router.push('/explore')}>
-              Hủy
-            </Button>
-            <Button type="submit" className="gap-2 bg-amber-600 hover:bg-amber-700">
-              <Pencil className="h-4 w-4" /> Cập nhật khóa học
-            </Button>
-          </CardFooter>
-        </form>
-      </Form>
+            <CardFooter className="flex justify-end space-x-4 border rounded-lg py-4">
+              <Button type="button" variant="outline" onClick={() => router.push('/explore')}>
+                Cancel
+              </Button>
+              <Button type="submit" className="gap-2 bg-amber-600 hover:bg-amber-700">
+                <Pencil className="h-4 w-4" /> Update Course
+              </Button>
+            </CardFooter>
+          </form>
+        </Form>
 
-      {/* Dialog xóa khóa học */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận xóa khóa học</AlertDialogTitle>
-            <AlertDialogDescription>
-              Bạn có chắc chắn muốn xóa khóa học này không? Hành động này không thể hoàn tác.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteCourse} className="bg-red-600 hover:bg-red-700">
-              Xóa
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+        {/* Dialog xóa khóa học */}
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Course Deletion</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this course? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteCourse}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </>
   );
 }
