@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { deleteCourse, updateCourse } from '@/redux/slices/courseSlice';
 import { Course, Lesson, Module } from '@/types/course';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Pencil, Plus, Trash2, X, GripVertical, MoveVertical, Edit, Save } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -20,6 +20,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import * as z from 'zod';
 import { FailureModal } from './../../../../../components/modal/FailureModal';
 import { SuccessModal } from './../../../../../components/modal/SuccessModal';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 const formSchema = z.object({
   title: z.string().min(5, 'Course title must be at least 5 characters long'),
@@ -270,6 +272,158 @@ export default function UpdateCoursePage() {
       setFailureModalOpen(true);
       return;
     }
+  };
+
+  // Thêm các states mới cho việc chỉnh sửa module
+  const [moduleEditOpen, setModuleEditOpen] = useState(false);
+  const [currentEditModule, setCurrentEditModule] = useState<Module | null>(null);
+  const [currentModuleIndex, setCurrentModuleIndex] = useState<number>(-1);
+  const [tempModuleData, setTempModuleData] = useState<Module | null>(null);
+
+  // Hàm xử lý khi mở modal chỉnh sửa module
+  const handleEditModule = (moduleIndex: number) => {
+    setCurrentModuleIndex(moduleIndex);
+    setCurrentEditModule(modules[moduleIndex]);
+    setTempModuleData(JSON.parse(JSON.stringify(modules[moduleIndex]))); // Deep copy
+    setModuleEditOpen(true);
+  };
+
+  // Lưu thay đổi cho module đang được chỉnh sửa
+  const saveModuleChanges = () => {
+    if (tempModuleData && currentModuleIndex >= 0) {
+      const newModules = [...modules];
+      newModules[currentModuleIndex] = tempModuleData;
+      setModules(newModules);
+      setModuleEditOpen(false);
+    }
+  };
+
+  // Cập nhật dữ liệu tạm thời của module
+  const updateTempModule = (field: keyof Module, value: string) => {
+    if (tempModuleData) {
+      setTempModuleData({
+        ...tempModuleData,
+        [field]: value
+      });
+    }
+  };
+
+  // Cập nhật bài học trong modal chỉnh sửa
+  const updateTempLesson = (lessonIndex: number, field: keyof Lesson, value: any) => {
+    if (!tempModuleData) return;
+    
+    const newLessons = [...tempModuleData.lessons];
+    newLessons[lessonIndex] = {
+      ...newLessons[lessonIndex],
+      [field]: value
+    };
+    
+    setTempModuleData({
+      ...tempModuleData,
+      lessons: newLessons
+    });
+  };
+
+  // Thêm bài học mới trong modal
+  const addTempLesson = () => {
+    if (!tempModuleData) return;
+    
+    const newLesson: Lesson = {
+      id: `lesson-${currentModuleIndex + 1}-${tempModuleData.lessons.length + 1}`,
+      title: `Lesson ${tempModuleData.lessons.length + 1}`,
+      duration: '0m',
+      isFree: false,
+      type: 'video',
+      videoUrl: 'https://youtu.be/dGcsHMXbSOA',
+    };
+    
+    setTempModuleData({
+      ...tempModuleData,
+      lessons: [...tempModuleData.lessons, newLesson]
+    });
+  };
+
+  // Xóa bài học trong modal
+  const removeTempLesson = (lessonIndex: number) => {
+    if (!tempModuleData) return;
+    
+    const newLessons = tempModuleData.lessons.filter((_, i) => i !== lessonIndex);
+    setTempModuleData({
+      ...tempModuleData,
+      lessons: newLessons
+    });
+  };
+
+  // Xử lý kéo thả để sắp xếp lại modules
+  const handleDragEnd = (result: any) => {
+    if (!result.destination) return;
+    
+    const { source, destination, type } = result;
+    
+    if (type === 'module') {
+      const reorderedModules = Array.from(modules);
+      const [removed] = reorderedModules.splice(source.index, 1);
+      reorderedModules.splice(destination.index, 0, removed);
+      setModules(reorderedModules);
+      return;
+    }
+    
+    if (type === 'lesson') {
+      // Extract module ID from droppableId which should be in format "lessons-{moduleIndex}"
+      const sourceModuleIndex = parseInt(source.droppableId.split('-')[1]);
+      const destModuleIndex = parseInt(destination.droppableId.split('-')[1]);
+      
+      const newModules = [...modules];
+      
+      // Same module, just reordering lessons
+      if (sourceModuleIndex === destModuleIndex) {
+        const moduleToUpdate = {...newModules[sourceModuleIndex]};
+        const lessons = Array.from(moduleToUpdate.lessons);
+        const [removed] = lessons.splice(source.index, 1);
+        lessons.splice(destination.index, 0, removed);
+        moduleToUpdate.lessons = lessons;
+        newModules[sourceModuleIndex] = moduleToUpdate;
+      } else {
+        // Moving lessons between modules
+        const sourceModule = {...newModules[sourceModuleIndex]};
+        const destModule = {...newModules[destModuleIndex]};
+        
+        const sourceLessons = Array.from(sourceModule.lessons);
+        const [removed] = sourceLessons.splice(source.index, 1);
+        sourceModule.lessons = sourceLessons;
+        
+        const destLessons = Array.from(destModule.lessons);
+        destLessons.splice(destination.index, 0, removed);
+        destModule.lessons = destLessons;
+        
+        newModules[sourceModuleIndex] = sourceModule;
+        newModules[destModuleIndex] = destModule;
+      }
+      
+      setModules(newModules);
+    }
+  };
+
+  // Hàm tính tổng thời lượng của module dựa trên các bài học
+  const calculateModuleDuration = (moduleIndex: number) => {
+    const module = modules[moduleIndex];
+    let totalMinutes = 0;
+    
+    // Tính tổng thời lượng từ các bài học
+    module.lessons.forEach(lesson => {
+      const durationString = lesson.duration;
+      // Trích xuất số phút từ chuỗi thời lượng (vd: "45m" -> 45)
+      const minutes = parseInt(durationString.replace(/[^0-9]/g, '')) || 0;
+      totalMinutes += minutes;
+    });
+    
+    // Chuyển đổi phút thành format "Xh Ym"
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    const formattedDuration = `${hours > 0 ? hours + 'h ' : ''}${minutes > 0 ? minutes + 'm' : ''}`;
+    
+    // Cập nhật thời lượng cho module
+    updateModule(moduleIndex, 'duration', formattedDuration.trim() || '0m');
   };
 
   return (
@@ -805,7 +959,7 @@ export default function UpdateCoursePage() {
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Course Content</CardTitle>
-                  <CardDescription>Add modules and lessons to the course </CardDescription>
+                  <CardDescription>Add modules and lessons to the course</CardDescription>
                 </div>
                 <Button type="button" variant="outline" onClick={addModule} className="gap-1">
                   <Plus className="h-4 w-4" /> Add Module
@@ -817,190 +971,176 @@ export default function UpdateCoursePage() {
                     <p>No modules added yet. Please add your first module!</p>
                   </div>
                 ) : (
-                  <div className="space-y-8">
-                    {modules.map((module, moduleIndex) => (
-                      <div key={module.id} className="border rounded-lg p-4 space-y-4">
-                        <div className="flex justify-between items-center">
-                          <h3 className="text-lg font-medium">Module {moduleIndex + 1}</h3>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => removeModule(moduleIndex)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                          <div>
-                            <FormLabel>Title</FormLabel>
-                            <Input
-                              value={module.title}
-                              onChange={(e) => updateModule(moduleIndex, 'title', e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <FormLabel>Duration</FormLabel>
-                            <Input
-                              value={module.duration}
-                              onChange={(e) =>
-                                updateModule(moduleIndex, 'duration', e.target.value)
-                              }
-                              placeholder="e.g. 2h 30m"
-                            />
-                          </div>
-                        </div>
-
-                        <Separator className="my-4" />
-
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <h4 className="font-medium">Lessons</h4>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => addLesson(moduleIndex)}
-                              size="sm"
-                              className="gap-1"
-                            >
-                              <Plus className="h-3 w-3" /> Add Lesson
-                            </Button>
-                          </div>
-
-                          {module.lessons.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">
-                              No lessons added yet. Please add your first lesson!
-                            </p>
-                          ) : (
-                            <div className="space-y-3">
-                              {module.lessons.map((lesson, lessonIndex) => (
-                                <div key={lesson.id} className="border rounded-md p-3 space-y-3">
+                  <DragDropContext onDragEnd={handleDragEnd}>
+                    <Droppable droppableId="modules" type="module">
+                      {(provided) => (
+                        <div 
+                          className="space-y-6" 
+                          {...provided.droppableProps}
+                          ref={provided.innerRef}
+                        >
+                          {modules.map((module, moduleIndex) => (
+                            <Draggable key={module.id} draggableId={module.id} index={moduleIndex}>
+                              {(provided) => (
+                                <div 
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  className="border rounded-lg p-4 space-y-4"
+                                >
                                   <div className="flex justify-between items-center">
-                                    <h5 className="text-sm font-medium">
-                                      Lesson {lessonIndex + 1}
-                                    </h5>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      onClick={() => removeLesson(moduleIndex, lessonIndex)}
-                                      size="sm"
-                                      className="h-6 w-6 p-0"
-                                    >
-                                      <X className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-
-                                  <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                                    <div>
-                                      <FormLabel className="text-xs">Title</FormLabel>
-                                      <Input
-                                        className="h-8 text-sm"
-                                        value={lesson.title}
-                                        onChange={(e) =>
-                                          updateLesson(
-                                            moduleIndex,
-                                            lessonIndex,
-                                            'title',
-                                            e.target.value
-                                          )
-                                        }
-                                      />
+                                    <div className="flex items-center gap-2">
+                                      <div {...provided.dragHandleProps} className="cursor-move">
+                                        <GripVertical className="h-5 w-5 text-slate-400" />
+                                      </div>
+                                      <h3 className="text-lg font-medium">
+                                        Module {moduleIndex + 1}: {module.title}
+                                      </h3>
                                     </div>
-                                    <div>
-                                      <FormLabel className="text-xs">Duration</FormLabel>
-                                      <Input
-                                        className="h-8 text-sm"
-                                        value={lesson.duration}
-                                        onChange={(e) =>
-                                          updateLesson(
-                                            moduleIndex,
-                                            lessonIndex,
-                                            'duration',
-                                            e.target.value
-                                          )
-                                        }
-                                        placeholder="vd: 45m"
-                                      />
-                                    </div>
-                                  </div>
-
-                                  <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                                    <div>
-                                      <FormLabel className="text-xs">Type</FormLabel>
-                                      <Select
-                                        value={lesson.type}
-                                        onValueChange={(value) =>
-                                          updateLesson(
-                                            moduleIndex,
-                                            lessonIndex,
-                                            'type',
-                                            value as any
-                                          )
-                                        }
+                                    <div className="flex gap-2">
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleEditModule(moduleIndex)}
+                                        className="h-8"
                                       >
-                                        <SelectTrigger className="h-8 text-sm">
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="video">Video</SelectItem>
-                                          <SelectItem value="exercise">Exercise</SelectItem>
-                                          <SelectItem value="quiz">Quiz</SelectItem>
-                                          <SelectItem value="project">Project</SelectItem>
-                                          <SelectItem value="challenge">Challenge</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                    <div className="flex items-center">
-                                      <input
-                                        type="checkbox"
-                                        id={`free-${module.id}-${lesson.id}`}
-                                        checked={lesson.isFree}
-                                        onChange={(e) =>
-                                          updateLesson(
-                                            moduleIndex,
-                                            lessonIndex,
-                                            'isFree',
-                                            e.target.checked
-                                          )
-                                        }
-                                        className="mr-2"
-                                      />
-                                      <label
-                                        htmlFor={`free-${module.id}-${lesson.id}`}
-                                        className="text-xs"
+                                        <Edit className="h-4 w-4 mr-1" /> Edit
+                                      </Button>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        onClick={() => removeModule(moduleIndex)}
+                                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
                                       >
-                                        Free Lesson
-                                      </label>
+                                        <X className="h-4 w-4" />
+                                      </Button>
                                     </div>
                                   </div>
 
-                                  {lesson.type === 'video' && (
+                                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                     <div>
-                                      <FormLabel className="text-xs">Video URL</FormLabel>
-                                      <Input
-                                        className="h-8 text-sm"
-                                        value={lesson.videoUrl || ''}
-                                        onChange={(e) =>
-                                          updateLesson(
-                                            moduleIndex,
-                                            lessonIndex,
-                                            'videoUrl',
-                                            e.target.value
-                                          )
-                                        }
-                                        placeholder="https://youtu.be/..."
-                                      />
+                                      <FormLabel>Title</FormLabel>
+                                      <div className="flex items-center mt-1">
+                                        <Input
+                                          value={module.title}
+                                          onChange={(e) => updateModule(moduleIndex, 'title', e.target.value)}
+                                          className="bg-slate-50"
+                                        />
+                                      </div>
                                     </div>
-                                  )}
+                                    <div>
+                                      <FormLabel>Duration</FormLabel>
+                                      <div className="flex items-center gap-2 mt-1">
+                                        <Input
+                                          value={module.duration}
+                                          onChange={(e) => updateModule(moduleIndex, 'duration', e.target.value)}
+                                          placeholder="e.g. 2h 30m"
+                                          className="bg-slate-50"
+                                        />
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => calculateModuleDuration(moduleIndex)}
+                                          className="whitespace-nowrap"
+                                        >
+                                          Auto Calculate
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <Separator className="my-4" />
+
+                                  <div>
+                                    <div className="flex justify-between items-center mb-2">
+                                      <h4 className="font-medium">Lessons ({module.lessons.length})</h4>
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => addLesson(moduleIndex)}
+                                        size="sm"
+                                        className="gap-1"
+                                      >
+                                        <Plus className="h-3 w-3" /> Add Lesson
+                                      </Button>
+                                    </div>
+
+                                    {module.lessons.length === 0 ? (
+                                      <p className="text-sm text-muted-foreground bg-slate-50 p-3 rounded-md">
+                                        No lessons added yet. Please add your first lesson!
+                                      </p>
+                                    ) : (
+                                      <Droppable droppableId={`lessons-${moduleIndex}`} type="lesson">
+                                        {(provided) => (
+                                          <div 
+                                            className="space-y-2"
+                                            ref={provided.innerRef}
+                                            {...provided.droppableProps}
+                                          >
+                                            {module.lessons.map((lesson, lessonIndex) => (
+                                              <Draggable 
+                                                key={lesson.id} 
+                                                draggableId={lesson.id} 
+                                                index={lessonIndex}
+                                              >
+                                                {(provided) => (
+                                                  <div 
+                                                    ref={provided.innerRef}
+                                                    {...provided.draggableProps}
+                                                    className="border rounded-md p-3 bg-white hover:bg-slate-50 transition-colors"
+                                                  >
+                                                    <div className="flex items-center justify-between">
+                                                      <div className="flex items-center gap-2">
+                                                        <div {...provided.dragHandleProps} className="cursor-move">
+                                                          <MoveVertical className="h-4 w-4 text-slate-400" />
+                                                        </div>
+                                                        <div>
+                                                          <h5 className="text-sm font-medium">
+                                                            {lesson.title}
+                                                          </h5>
+                                                          <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                                                            <span>{lesson.type}</span>
+                                                            <span>•</span>
+                                                            <span>{lesson.duration}</span>
+                                                            {lesson.isFree && (
+                                                              <>
+                                                                <span>•</span>
+                                                                <span className="bg-green-100 text-green-700 px-1 rounded">Free</span>
+                                                              </>
+                                                            )}
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                      <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        onClick={() => removeLesson(moduleIndex, lessonIndex)}
+                                                        size="sm"
+                                                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                      >
+                                                        <X className="h-3 w-3" />
+                                                      </Button>
+                                                    </div>
+                                                  </div>
+                                                )}
+                                              </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                          </div>
+                                        )}
+                                      </Droppable>
+                                    )}
+                                  </div>
                                 </div>
-                              ))}
-                            </div>
-                          )}
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      )}
+                    </Droppable>
+                  </DragDropContext>
                 )}
                 {modules.length === 0 && (
                   <p className="text-sm text-red-500 mt-2">Please add at least one module</p>
@@ -1039,6 +1179,146 @@ export default function UpdateCoursePage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Modal chỉnh sửa module */}
+        <Dialog open={moduleEditOpen} onOpenChange={setModuleEditOpen}>
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Module</DialogTitle>
+            </DialogHeader>
+            
+            {tempModuleData && (
+              <div className="space-y-6 py-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="text-sm font-medium">Module Title</label>
+                    <Input
+                      value={tempModuleData.title}
+                      onChange={(e) => updateTempModule('title', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Duration</label>
+                    <Input
+                      value={tempModuleData.duration}
+                      onChange={(e) => updateTempModule('duration', e.target.value)}
+                      placeholder="e.g. 2h 30m"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-medium">Lessons ({tempModuleData.lessons.length})</h3>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={addTempLesson}
+                      size="sm"
+                      className="gap-1"
+                    >
+                      <Plus className="h-3 w-3" /> Add Lesson
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-4 max-h-[50vh] overflow-y-auto p-1">
+                    {tempModuleData.lessons.map((lesson, lessonIndex) => (
+                      <div key={lesson.id} className="border rounded-md p-3 space-y-3">
+                        <div className="flex justify-between items-center">
+                          <h4 className="font-medium">Lesson {lessonIndex + 1}</h4>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => removeTempLesson(lessonIndex)}
+                            size="sm"
+                            className="h-6 w-6 p-0 text-red-500 hover:bg-red-50"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                          <div>
+                            <label className="text-xs font-medium">Title</label>
+                            <Input
+                              className="h-8 text-sm"
+                              value={lesson.title}
+                              onChange={(e) => updateTempLesson(lessonIndex, 'title', e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium">Duration</label>
+                            <Input
+                              className="h-8 text-sm"
+                              value={lesson.duration}
+                              onChange={(e) => updateTempLesson(lessonIndex, 'duration', e.target.value)}
+                              placeholder="vd: 45m"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                          <div>
+                            <label className="text-xs font-medium">Type</label>
+                            <Select
+                              value={lesson.type}
+                              onValueChange={(value) => updateTempLesson(lessonIndex, 'type', value as any)}
+                            >
+                              <SelectTrigger className="h-8 text-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="video">Video</SelectItem>
+                                <SelectItem value="exercise">Exercise</SelectItem>
+                                <SelectItem value="quiz">Quiz</SelectItem>
+                                <SelectItem value="project">Project</SelectItem>
+                                <SelectItem value="challenge">Challenge</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              id={`modal-free-${lesson.id}`}
+                              checked={lesson.isFree}
+                              onChange={(e) => updateTempLesson(lessonIndex, 'isFree', e.target.checked)}
+                              className="mr-2"
+                            />
+                            <label
+                              htmlFor={`modal-free-${lesson.id}`}
+                              className="text-xs"
+                            >
+                              Free Lesson
+                            </label>
+                          </div>
+                        </div>
+                        
+                        {lesson.type === 'video' && (
+                          <div>
+                            <label className="text-xs font-medium">Video URL</label>
+                            <Input
+                              className="h-8 text-sm"
+                              value={lesson.videoUrl || ''}
+                              onChange={(e) => updateTempLesson(lessonIndex, 'videoUrl', e.target.value)}
+                              placeholder="https://youtu.be/..."
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setModuleEditOpen(false)}>Cancel</Button>
+              <Button onClick={saveModuleChanges} className="gap-2">
+                <Save className="h-4 w-4" /> Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   );
