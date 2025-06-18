@@ -1,8 +1,17 @@
-"use client"
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from '@/components/ui/navigation-menu'
-import { cn } from '@/lib/utils'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+} from '@/components/ui/navigation-menu';
+import { cn } from '@/lib/utils';
 import { UserData } from '@/types/Users';
 import {
   BrainIcon,
@@ -16,10 +25,11 @@ import {
   UsersIcon,
 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export const Navbar = () => {
+  const router = useRouter();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -37,6 +47,7 @@ export const Navbar = () => {
   const handleLogOut = () => {
     localStorage.removeItem('userId');
     localStorage.removeItem('userData');
+    router.push('/login');
   };
 
   useEffect(() => {
@@ -193,4 +204,4 @@ export const Navbar = () => {
   );
 };
 
-export default Navbar
+export default Navbar;
