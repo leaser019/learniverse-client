@@ -76,7 +76,7 @@ interface Stat {
 const stats: Stat[] = [
   {
     title: 'Ongoing Courses',
-    value: '5',
+    value: '3',
     icon: BookOpen,
     gradient: 'from-pink-500/90 to-red-600/90',
     progressColor: 'bg-gradient-to-r from-pink-400 via-pink-500 to-red-600',
@@ -90,14 +90,14 @@ const stats: Stat[] = [
   },
   {
     title: 'Certificates Earned',
-    value: '12',
+    value: '1',
     icon: GraduationCap,
     gradient: 'from-yellow-400/90 to-orange-500/90',
     progressColor: 'bg-gradient-to-r from-yellow-300 via-yellow-400 to-orange-500',
   },
   {
     title: 'Recent Activities',
-    value: '24',
+    value: '2',
     icon: ActivitySquare,
     gradient: 'from-purple-500/90 to-pink-600/90',
     progressColor: 'bg-gradient-to-r from-purple-400 via-purple-500 to-pink-600',
